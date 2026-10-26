@@ -29,6 +29,11 @@ h1{margin:0;color:#202124;font-size:clamp(34px,7vw,47px);line-height:1.16;letter
 .icon-button{width:34px;height:34px;border:0;border-radius:7px;background:transparent;color:#686964;font-size:22px;cursor:pointer}
 .icon-button:hover{background:#f1f0ec}
 .source-preview{width:100%;max-height:380px;margin-top:12px;border-radius:8px;background:#111}
+.audio-option{display:flex;align-items:center;gap:10px;margin-top:12px;padding:12px 13px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}
+.audio-option input{width:17px;height:17px;flex:none;margin:0;accent-color:#202124}
+.audio-option span{display:flex;flex-direction:column;gap:3px}
+.audio-option strong{font-size:12px;font-weight:600}
+.audio-option small{color:var(--muted);font-size:11px;line-height:1.4}
 .process-button{margin-top:12px}
 .process-button:disabled{background:#aaa;color:#f8f7f4;cursor:wait}
 .engine-card,.result-card{margin-top:12px;padding:15px;border:1px solid var(--line);border-radius:8px;background:#fff;text-align:left}

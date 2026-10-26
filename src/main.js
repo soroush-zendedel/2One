@@ -16,7 +16,7 @@ const copy = {
     error: 'Could not process video', retry: 'Try again', invalid: 'Please choose a video file.', unsupported: 'Your browser could not open this video.', durationError: 'Could not read the video duration.', noSegments: 'Could not analyze this video.',
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
     readingMetadata: (size) => `Reading video · ${size}`,
-    result: (count, size) => `59 seconds · ${size} · ${count} still moments shortened`,
+    result: (count, size, silent) => `59 seconds · ${size} · ${count} still moments shortened${silent ? ' · Audio removed' : ''}`,
     progressBytes: (received, total, cached) => `${received} of ${total} · ${cached ? 'saved copy' : 'downloaded'}`,
     received: (received) => `${received} downloaded · video engine`,
     failed: (name, status) => `Could not download ${name} (${status}).`,
@@ -32,7 +32,7 @@ const copy = {
     error: 'پردازش ویدیو انجام نشد', retry: 'تلاش دوباره', invalid: 'لطفاً یک فایل ویدیویی انتخاب کن.', unsupported: 'مرورگر نتوانست این ویدیو را باز کند.', durationError: 'مدت ویدیو قابل‌خواندن نیست.', noSegments: 'تحلیل ویدیو انجام نشد.',
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
     readingMetadata: (size) => `در حال خواندن ویدیو · ${size}`,
-    result: (count, size) => `۵۹ ثانیه · ${size} · ${count} بخش ثابت کوتاه شد`,
+    result: (count, size, silent) => `۵۹ ثانیه · ${size} · ${count} بخش ثابت کوتاه شد${silent ? ' · صدا حذف شد' : ''}`,
     progressBytes: (received, total, cached) => `${received} از ${total} · ${cached ? 'نسخهٔ ذخیره‌شده' : 'در حال دریافت'}`,
     received: (received) => `${received} دریافت شد · موتور ویدیو`,
     failed: (name, status) => `دریافت ${name} ناموفق بود (${status}).`,
@@ -68,6 +68,7 @@ const $ = (id) => document.getElementById(id);
 const ui = {
   input: $('videoInput'), selectButton: $('selectButton'), process: $('processButton'),
   preview: $('sourcePreview'), panel: $('filePanel'), fileName: $('fileName'), fileDetails: $('fileDetails'), remove: $('removeFile'),
+  removeAudio: $('removeAudio'),
   engine: $('engineCard'), engineTitle: $('engineTitle'), engineText: $('engineText'),
   enginePercent: $('enginePercent'), engineProgress: $('engineProgress'),
   result: $('resultCard'), resultDetails: $('resultDetails'), download: $('downloadButton'), toast: $('toast'),
@@ -355,11 +356,12 @@ async function processVideo() {
     if (!segments.length) throw new Error(t('noSegments'));
     const allocation = allocateDurations(segments);
     const hasAudio = analysisLogs.some((line) => /\bAudio:/i.test(line));
-    const filters = createTimeline(segments, allocation.durations, hasAudio);
+    const keepAudio = hasAudio && !ui.removeAudio.checked;
+    const filters = createTimeline(segments, allocation.durations, keepAudio);
 
     setProgress(25, t('making'), isPersian ? `${allocation.freezeCount.toLocaleString('fa-IR')} بخش ثابت پیدا شد` : `${allocation.freezeCount.toLocaleString('en-US')} still moments found`);
     const args = ['-hide_banner', '-i', inputName, '-filter_complex', filters, '-map', '[vout]'];
-    if (hasAudio) args.push('-map', '[aout]', '-c:a', 'aac', '-b:a', '160k');
+    if (keepAudio) args.push('-map', '[aout]', '-c:a', 'aac', '-b:a', '160k');
     args.push('-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '24', '-pix_fmt', 'yuv420p',
       '-fps_mode', 'passthrough', '-enc_time_base', '1:1000000', '-video_track_timescale', '1000000',
       '-t', '59.000000', '-movflags', '+faststart', outputName);
@@ -376,7 +378,7 @@ async function processVideo() {
     ui.selectButton.hidden = true;
     ui.download.href = outputUrl;
     ui.download.download = `${chosenFile.name.replace(/\.[^.]+$/, '')}_2One.mp4`;
-    ui.resultDetails.textContent = t('result', allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength));
+    ui.resultDetails.textContent = t('result', allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength), hasAudio && !keepAudio);
     ui.result.hidden = false;
     setProgress(100, t('complete'), t('kept'));
     toast(t('toastReady'));
@@ -430,6 +432,7 @@ ui.process.addEventListener('click', processVideo);
 ui.remove.addEventListener('click', () => {
   if (busy) return;
   chosenFile = null;
+  ui.removeAudio.checked = false;
   ui.input.value = '';
   ui.panel.hidden = true;
   ui.result.hidden = true;

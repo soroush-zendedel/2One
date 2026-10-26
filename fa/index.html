@@ -43,6 +43,10 @@
               <button id="removeFile" class="icon-button" type="button" data-aria="remove" aria-label="حذف ویدیو">×</button>
             </div>
             <video id="sourcePreview" class="source-preview" controls playsinline hidden></video>
+            <label class="audio-option" for="removeAudio">
+              <input id="removeAudio" type="checkbox" />
+              <span><strong>حذف صدا</strong><small>اگر صدای سریع‌شده واضح نیست، فعالش کن.</small></span>
+            </label>
             <button id="processButton" class="process-button" type="button" disabled data-t="makeShort">۵۹ ثانیه‌ای کن</button>
             <div id="engineCard" class="engine-card" hidden aria-live="polite">
               <div class="progress-label"><span id="engineTitle"></span><span id="enginePercent"></span></div>
