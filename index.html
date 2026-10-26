@@ -20,7 +20,7 @@
         <a class="brand" href="./" aria-label="2One home">2One</a>
         <nav class="topbar-links" aria-label="Main navigation">
           <a href="./about.html" data-t="aboutLink">About</a>
-          <a class="language-link" href="./fa/" lang="fa" hreflang="fa" data-t="languageLink">فارسی</a>
+          <a class="language-link" href="./fa/" lang="fa" hreflang="fa" data-t="languageLink"><span class="language-full">فارسی</span><span class="language-short" aria-hidden="true">FA</span></a>
         </nav>
       </header>
 
@@ -48,13 +48,13 @@
             <video id="sourcePreview" class="source-preview" controls playsinline hidden></video>
             <label class="audio-option duration-option" for="fitTo59">
               <input id="fitTo59" type="checkbox" checked />
-              <span><strong>Fit to 59 seconds</strong><small>Videos under 59 seconds won’t be slowed down.</small></span>
+              <span><strong>Fit to 59 seconds</strong><small>Adjust the video to exactly 59 seconds.</small></span>
             </label>
             <label class="audio-option" for="removeAudio">
               <input id="removeAudio" type="checkbox" />
               <span><strong>Remove audio</strong><small>Use if the sped-up sound feels distorted.</small></span>
             </label>
-            <button id="processButton" class="process-button" type="button" disabled data-t="makeShort">Make it 59 seconds</button>
+            <button id="processButton" class="process-button" type="button" disabled data-t="makeVideo">Create video</button>
             <div id="engineCard" class="engine-card" hidden aria-live="polite">
               <div class="progress-label"><span id="engineTitle"></span><span id="enginePercent"></span></div>
               <p id="engineText"></p>

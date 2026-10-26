@@ -17,7 +17,7 @@ const copy = {
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
     readingMetadata: (size) => `Reading video · ${size}`,
     result: (duration, count, size, silent) => `${duration} · ${size} · ${count} still moments shortened${silent ? ' · Audio removed' : ''}`,
-    fitButton: 'Make it 59 seconds', shortenButton: 'Shorten still moments',
+    makeVideo: 'Create video',
     progressBytes: (received, total, cached) => `${received} of ${total} · ${cached ? 'saved copy' : 'downloaded'}`,
     received: (received) => `${received} downloaded · video engine`,
     failed: (name, status) => `Could not download ${name} (${status}).`,
@@ -34,7 +34,7 @@ const copy = {
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
     readingMetadata: (size) => `در حال خواندن ویدیو · ${size}`,
     result: (duration, count, size, silent) => `${duration} · ${size} · ${count} بخش ثابت کوتاه شد${silent ? ' · صدا حذف شد' : ''}`,
-    fitButton: 'تنظیم روی ۵۹ ثانیه', shortenButton: 'کوتاه‌کردن مکث‌ها',
+    makeVideo: 'ساخت ویدیو',
     progressBytes: (received, total, cached) => `${received} از ${total} · ${cached ? 'نسخهٔ ذخیره‌شده' : 'در حال دریافت'}`,
     received: (received) => `${received} دریافت شد · موتور ویدیو`,
     failed: (name, status) => `دریافت ${name} ناموفق بود (${status}).`,
@@ -86,12 +86,6 @@ let outputUrl;
 let toastTimer;
 let activeLogs = null;
 let detectedFps = 30;
-let chosenDuration = null;
-
-function updateProcessButton() {
-  const shouldFit = ui.fitTo59.checked && chosenDuration > TARGET_SECONDS;
-  ui.process.textContent = t(shouldFit ? 'fitButton' : 'shortenButton');
-}
 
 async function waitForEngineCache(url, timeoutMs = 8000) {
   const controller = navigator.serviceWorker?.controller;
@@ -367,8 +361,7 @@ async function processVideo() {
     const pauses = extractFreezeSpans(analysisLogs, info.duration);
     const segments = makeSegments(info.duration, pauses);
     if (!segments.length) throw new Error(t('noSegments'));
-    // Never stretch a short source just to fill 59 seconds. It can still have its pauses shortened.
-    const fitTo59 = ui.fitTo59.checked && info.duration > TARGET_SECONDS;
+    const fitTo59 = ui.fitTo59.checked;
     const allocation = allocateDurations(segments, fitTo59);
     const hasAudio = analysisLogs.some((line) => /\bAudio:/i.test(line));
     const keepAudio = hasAudio && !ui.removeAudio.checked;
@@ -421,7 +414,6 @@ async function setFile(file) {
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   if (outputUrl) { URL.revokeObjectURL(outputUrl); outputUrl = null; }
   chosenFile = file;
-  chosenDuration = null;
   previewUrl = URL.createObjectURL(file);
   ui.preview.src = previewUrl;
   ui.preview.controls = true;
@@ -436,8 +428,6 @@ async function setFile(file) {
   ui.engineProgress.style.width = '0%';
   try {
     const info = await readVideoInfo(file);
-    chosenDuration = info.duration;
-    updateProcessButton();
     ui.fileDetails.textContent = t('fileDuration', prettyDuration(info.duration), prettySize(file.size), info.width, info.height);
   } catch (error) {
     ui.fileDetails.textContent = prettySize(file.size);
@@ -448,13 +438,9 @@ async function setFile(file) {
 ui.input.addEventListener('change', (event) => setFile(event.target.files?.[0]));
 ui.selectButton.addEventListener('click', () => ui.input.click());
 ui.process.addEventListener('click', processVideo);
-ui.fitTo59.addEventListener('change', () => {
-  updateProcessButton();
-});
 ui.remove.addEventListener('click', () => {
   if (busy) return;
   chosenFile = null;
-  chosenDuration = null;
   ui.removeAudio.checked = false;
   ui.input.value = '';
   ui.panel.hidden = true;

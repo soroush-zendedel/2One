@@ -20,7 +20,7 @@
         <a class="brand" href="../" aria-label="صفحه اصلی 2One">2One</a>
         <nav class="topbar-links" aria-label="ناوبری اصلی">
           <a href="about.html" data-t="aboutLink">درباره</a>
-          <a class="language-link" href="../" lang="en" hreflang="en" data-t="languageLink">English</a>
+          <a class="language-link" href="../" lang="en" hreflang="en" data-t="languageLink"><span class="language-full">English</span><span class="language-short" aria-hidden="true">EN</span></a>
         </nav>
       </header>
       <main id="main">
@@ -45,13 +45,13 @@
             <video id="sourcePreview" class="source-preview" controls playsinline hidden></video>
             <label class="audio-option duration-option" for="fitTo59">
               <input id="fitTo59" type="checkbox" checked />
-              <span><strong>تنظیم روی ۵۹ ثانیه</strong><small>ویدیوهای کوتاه‌تر کند نمی‌شوند.</small></span>
+              <span><strong>تنظیم روی ۵۹ ثانیه</strong><small>مدت ویدیو دقیقاً به ۵۹ ثانیه تنظیم می‌شود.</small></span>
             </label>
             <label class="audio-option" for="removeAudio">
               <input id="removeAudio" type="checkbox" />
               <span><strong>حذف صدا</strong><small>اگر صدای سریع‌شده واضح نیست، فعالش کن.</small></span>
             </label>
-            <button id="processButton" class="process-button" type="button" disabled data-t="makeShort">۵۹ ثانیه‌ای کن</button>
+            <button id="processButton" class="process-button" type="button" disabled data-t="makeVideo">ساخت ویدیو</button>
             <div id="engineCard" class="engine-card" hidden aria-live="polite">
               <div class="progress-label"><span id="engineTitle"></span><span id="enginePercent"></span></div>
               <p id="engineText"></p>
