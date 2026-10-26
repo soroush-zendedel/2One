@@ -3,3 +3,5 @@ dist/
 .vite/
 .DS_Store
 Thumbs.db
+public/ffmpeg/
+2one-smoke-test.mp4

@@ -1,7 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import './style.css';
 
-const CORE_BASE = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
+const CORE_BASE = `${import.meta.env.BASE_URL}ffmpeg/`;
 const TARGET_SECONDS = 59;
 const $ = (id) => document.getElementById(id);
 const ui = {
@@ -59,41 +59,39 @@ function showError(message) {
   ui.engineProgress.style.background = '#ff6685';
 }
 
-async function fetchAsBlobUrl(url, mime, rangeStart, rangeEnd, name) {
-  const response = await fetch(url);
+async function preloadAsset(url, rangeStart, rangeEnd, name) {
+  const response = await fetch(url, { cache: 'force-cache' });
   if (!response.ok) throw new Error(`دریافت ${name} ناموفق بود (${response.status}).`);
   const total = Number(response.headers.get('content-length')) || 0;
   const reader = response.body.getReader();
-  const chunks = [];
   let received = 0;
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    chunks.push(value);
     received += value.byteLength;
     if (total) {
       const fraction = Math.min(1, received / total);
       setProgress(rangeStart + fraction * (rangeEnd - rangeStart), `دریافت موتور ویدیو · ${name}`,
-        `${prettySize(received)} از ${prettySize(total)} · فقط بار اول`);
+        `${prettySize(received)} از ${prettySize(total)} · موتور محلی`);
     } else {
       setProgress(rangeStart + ((received / (30 * 1024 * 1024)) * (rangeEnd - rangeStart)) % (rangeEnd - rangeStart),
-        `دریافت موتور ویدیو · ${name}`, `${prettySize(received)} دریافت شد · فقط بار اول`);
+        `دریافت موتور ویدیو · ${name}`, `${prettySize(received)} دریافت شد · موتور محلی`);
     }
   }
-  return URL.createObjectURL(new Blob(chunks, { type: mime }));
+  return url;
 }
 
 async function loadEngine() {
   if (engineReady) return;
   ui.engineSpinner.style.animationPlayState = 'running';
   ui.engineProgress.style.background = '';
-  setProgress(0, 'دریافت موتور ویدیو', 'حدود ۳۱ مگابایت · فقط بار اول');
+  setProgress(0, 'دریافت موتور ویدیو', 'حدود ۳۱ مگابایت · فایل‌های موتور همراه سایت هستند');
   ui.process.disabled = true;
-  let coreUrl;
-  let wasmUrl;
   try {
-    coreUrl = await fetchAsBlobUrl(`${CORE_BASE}/ffmpeg-core.js`, 'text/javascript', 0, 12, 'فایل اجرایی');
-    wasmUrl = await fetchAsBlobUrl(`${CORE_BASE}/ffmpeg-core.wasm`, 'application/wasm', 12, 82, 'موتور پردازش');
+    const coreUrl = new URL(`${CORE_BASE}ffmpeg-core.js`, window.location.href).href;
+    const wasmUrl = new URL(`${CORE_BASE}ffmpeg-core.wasm`, window.location.href).href;
+    await preloadAsset(coreUrl, 0, 8, 'فایل اجرایی');
+    await preloadAsset(wasmUrl, 8, 82, 'موتور پردازش');
     setProgress(85, 'راه‌اندازی موتور ویدیو', 'این مرحله ممکن است چند لحظه طول بکشد');
     ffmpeg ??= new FFmpeg();
     ffmpeg.on('log', ({ message }) => {
@@ -110,10 +108,7 @@ async function loadEngine() {
     ffmpeg = undefined;
     engineReady = false;
     throw error;
-  } finally {
-    if (coreUrl) URL.revokeObjectURL(coreUrl);
-    if (wasmUrl) URL.revokeObjectURL(wasmUrl);
-  }
+  } finally {}
 }
 
 function readVideoInfo(file) {
