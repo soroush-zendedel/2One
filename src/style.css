@@ -97,6 +97,15 @@ html[lang=fa] .share-button{font-family:Vazirmatn,system-ui,sans-serif}
 .toast.show{transform:translate(-50%,0);opacity:1}
 [hidden]{display:none!important}
 
+/* A selected video switches the landing page into a focused editing view. */
+.app-shell.is-editing{min-height:100dvh}
+.app-shell.is-editing .topbar,.app-shell.is-editing .site-footer,.app-shell.is-editing .intro{display:none}
+.app-shell.is-editing main{display:flex;flex:1;flex-direction:column;justify-content:center}
+.app-shell.is-editing .studio{width:min(100%,720px);margin:0 auto;transform:none}
+.app-shell.is-editing .file-panel{margin-top:0}
+.app-shell.is-editing .source-preview{max-height:min(44dvh,520px);margin-top:12px;object-fit:contain}
+.app-shell.is-editing .duration-option{margin-top:14px}
+
 @media(max-width:600px){
   body{min-height:100dvh;background:#f8f7f4}
   .app-shell{width:100%;min-height:100svh;min-height:100dvh;padding:env(safe-area-inset-top) 22px calc(126px + env(safe-area-inset-bottom))}
@@ -128,4 +137,10 @@ html[lang=fa] .share-button{font-family:Vazirmatn,system-ui,sans-serif}
   .about-section{margin-top:29px}
   .about-section h2{font-size:17px}
   .about-section p{font-size:14px;line-height:1.8}
+  .app-shell.is-editing{min-height:100svh;min-height:100dvh;padding:env(safe-area-inset-top) 22px env(safe-area-inset-bottom)}
+  .app-shell.is-editing main{justify-content:flex-start}
+  .app-shell.is-editing .studio{width:100%;margin:auto;transform:none}
+  .app-shell.is-editing .file-panel{margin-top:0}
+  .app-shell.is-editing .source-preview{height:min(40dvh,360px);max-height:min(40dvh,360px);margin-top:10px}
+  .app-shell.is-editing .duration-option{margin-top:10px}
 }

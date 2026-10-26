@@ -71,6 +71,7 @@ const serviceWorkerReady = (async () => {
 })();
 const $ = (id) => document.getElementById(id);
 const ui = {
+  shell: document.querySelector('.app-shell'),
   input: $('videoInput'), selectButton: $('selectButton'), process: $('processButton'),
   preview: $('sourcePreview'), panel: $('filePanel'), fileName: $('fileName'), fileDetails: $('fileDetails'), remove: $('removeFile'),
   removeAudio: $('removeAudio'), targetDuration: $('targetDuration'),
@@ -467,6 +468,7 @@ async function setFile(file) {
   if (outputUrl) { URL.revokeObjectURL(outputUrl); outputUrl = null; }
   outputFile = null;
   chosenFile = file;
+  ui.shell.classList.add('is-editing');
   previewUrl = URL.createObjectURL(file);
   ui.preview.src = previewUrl;
   ui.preview.controls = true;
@@ -518,6 +520,7 @@ ui.remove.addEventListener('click', () => {
   ui.preview.load();
   ui.preview.hidden = true;
   ui.selectButton.hidden = false;
+  ui.shell.classList.remove('is-editing');
   ui.process.disabled = true;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   if (outputUrl) URL.revokeObjectURL(outputUrl);
