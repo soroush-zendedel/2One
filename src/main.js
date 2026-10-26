@@ -3,7 +3,6 @@ import './style.css';
 
 const CORE_BASE = `${import.meta.env.BASE_URL}ffmpeg/`;
 const ENGINE_CACHE = '2one-engine-v1';
-const TARGET_SECONDS = 59;
 const isPersian = document.documentElement.lang === 'fa';
 const copy = {
   en: {
@@ -22,6 +21,7 @@ const copy = {
     failed: (name, status) => `Could not download ${name} (${status}).`,
     toastReady: 'Your video is ready to download.', unknown: 'Video processing failed.',
     shareVideo: 'Share video', shareUnavailable: 'Direct sharing is not available in this browser. Download the video to share it.', shareCancelled: 'Sharing cancelled.',
+    customDurationError: 'Enter a custom duration from 1 to 3,600 seconds.',
   },
   fa: {
     engineLoading: 'دریافت موتور ویدیو', engineCached: 'بارگذاری نسخهٔ ذخیره‌شده', engineSize: 'اولین‌بار حدود ۳۱ مگابایت · در صورت امکان در این مرورگر ذخیره می‌شود',
@@ -39,6 +39,7 @@ const copy = {
     failed: (name, status) => `دریافت ${name} ناموفق بود (${status}).`,
     toastReady: 'ویدیوت آمادهٔ دانلود است.', unknown: 'پردازش ویدیو ناموفق بود.',
     shareVideo: 'اشتراک‌گذاری ویدیو', shareUnavailable: 'اشتراک‌گذاری مستقیم در این مرورگر در دسترس نیست. ویدیو را دانلود و سپس ارسال کن.', shareCancelled: 'اشتراک‌گذاری لغو شد.',
+    customDurationError: 'مدت دلخواه را بین ۱ تا ۳۶۰۰ ثانیه وارد کن.',
   },
 };
 const t = (key, ...args) => {
@@ -70,7 +71,8 @@ const $ = (id) => document.getElementById(id);
 const ui = {
   input: $('videoInput'), selectButton: $('selectButton'), process: $('processButton'),
   preview: $('sourcePreview'), panel: $('filePanel'), fileName: $('fileName'), fileDetails: $('fileDetails'), remove: $('removeFile'),
-  removeAudio: $('removeAudio'), fitTo59: $('fitTo59'),
+  removeAudio: $('removeAudio'), targetDuration: $('targetDuration'),
+  customDurationRow: $('customDurationRow'), customDuration: $('customDuration'),
   engine: $('engineCard'), engineTitle: $('engineTitle'), engineText: $('engineText'),
   enginePercent: $('enginePercent'), engineProgress: $('engineProgress'),
   result: $('resultCard'), resultDetails: $('resultDetails'), download: $('downloadButton'), share: $('shareButton'), toast: $('toast'),
@@ -265,30 +267,30 @@ function makeSegments(duration, pauses) {
   return segments;
 }
 
-function allocateDurations(segments, fitTo59, pauseOption = 0.3) {
+function allocateDurations(segments, targetSeconds, pauseOption = 0.3) {
   const active = segments.filter((s) => !s.frozen).reduce((sum, s) => sum + s.end - s.start, 0);
   const frozen = segments.filter((s) => s.frozen).reduce((sum, s) => sum + s.end - s.start, 0);
   const freezeCount = segments.filter((s) => s.frozen).length;
   let durations;
-  if (!fitTo59) {
+  if (!targetSeconds) {
     durations = segments.map((s) => s.frozen ? Math.min(s.end - s.start, pauseOption) : s.end - s.start);
-  } else if (active >= TARGET_SECONDS) {
-    const pauseBudget = Math.min(frozen, pauseOption * freezeCount, TARGET_SECONDS * 0.1);
-    const activeScale = (TARGET_SECONDS - pauseBudget) / active;
+  } else if (active >= targetSeconds) {
+    const pauseBudget = Math.min(frozen, pauseOption * freezeCount, targetSeconds * 0.1);
+    const activeScale = (targetSeconds - pauseBudget) / active;
     const frozenScale = frozen ? pauseBudget / frozen : 0;
     durations = segments.map((s) => (s.end - s.start) * (s.frozen ? frozenScale : activeScale));
-  } else if (frozen >= TARGET_SECONDS - active) {
-    const frozenScale = frozen ? (TARGET_SECONDS - active) / frozen : 0;
+  } else if (frozen >= targetSeconds - active) {
+    const frozenScale = frozen ? (targetSeconds - active) / frozen : 0;
     durations = segments.map((s) => (s.end - s.start) * (s.frozen ? frozenScale : 1));
   } else {
-    const scale = TARGET_SECONDS / segments.reduce((sum, s) => sum + s.end - s.start, 0);
+    const scale = targetSeconds / segments.reduce((sum, s) => sum + s.end - s.start, 0);
     durations = segments.map((s) => (s.end - s.start) * scale);
   }
   if (!durations.length) throw new Error('هیچ بخشی برای پردازش پیدا نشد.');
-  if (fitTo59) {
-    durations[durations.length - 1] += TARGET_SECONDS - durations.reduce((a, b) => a + b, 0);
+  if (targetSeconds) {
+    durations[durations.length - 1] += targetSeconds - durations.reduce((a, b) => a + b, 0);
     const lastRatio = durations.at(-1) / (segments.at(-1).end - segments.at(-1).start);
-    const mappedEnd = TARGET_SECONDS - (1 - lastRatio) / detectedFps;
+    const mappedEnd = targetSeconds - (1 - lastRatio) / detectedFps;
     const correction = mappedEnd / durations.reduce((a, b) => a + b, 0);
     durations = durations.map((d) => d * correction);
   }
@@ -333,6 +335,14 @@ function createTimeline(segments, durations, hasAudio) {
 
 async function processVideo() {
   if (!chosenFile) return;
+  const targetSeconds = ui.targetDuration.value === 'auto'
+    ? null
+    : ui.targetDuration.value === 'custom' ? Number(ui.customDuration.value) : Number(ui.targetDuration.value);
+  if (targetSeconds !== null && (!Number.isFinite(targetSeconds) || targetSeconds < 1 || targetSeconds > 3600)) {
+    toast(t('customDurationError'));
+    ui.customDuration.focus();
+    return;
+  }
   busy = true;
   ui.process.disabled = true;
   ui.remove.disabled = true;
@@ -359,8 +369,7 @@ async function processVideo() {
     const pauses = extractFreezeSpans(analysisLogs, info.duration);
     const segments = makeSegments(info.duration, pauses);
     if (!segments.length) throw new Error(t('noSegments'));
-    const fitTo59 = ui.fitTo59.checked;
-    const allocation = allocateDurations(segments, fitTo59);
+    const allocation = allocateDurations(segments, targetSeconds);
     const hasAudio = analysisLogs.some((line) => /\bAudio:/i.test(line));
     const keepAudio = hasAudio && !ui.removeAudio.checked;
     const filters = createTimeline(segments, allocation.durations, keepAudio);
@@ -370,7 +379,7 @@ async function processVideo() {
     if (keepAudio) args.push('-map', '[aout]', '-c:a', 'aac', '-b:a', '160k');
     args.push('-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '24', '-pix_fmt', 'yuv420p',
       '-fps_mode', 'passthrough', '-enc_time_base', '1:1000000', '-video_track_timescale', '1000000',
-      ...(fitTo59 ? ['-t', '59.000000'] : []), '-movflags', '+faststart', outputName);
+      ...(targetSeconds !== null ? ['-t', targetSeconds.toFixed(6)] : []), '-movflags', '+faststart', outputName);
     encodingVideo = true;
     await ffmpeg.exec(args);
     encodingVideo = false;
@@ -385,7 +394,7 @@ async function processVideo() {
     ui.selectButton.hidden = true;
     ui.download.href = outputUrl;
     ui.download.download = outputFile.name;
-    const outputDuration = fitTo59 ? TARGET_SECONDS : allocation.durations.reduce((sum, duration) => sum + duration, 0);
+    const outputDuration = targetSeconds ?? allocation.durations.reduce((sum, duration) => sum + duration, 0);
     ui.resultDetails.textContent = t('result', prettyDuration(outputDuration), allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength), hasAudio && !keepAudio);
     ui.result.hidden = false;
     setProgress(100, t('complete'), t('kept'));
@@ -438,6 +447,9 @@ async function setFile(file) {
 ui.input.addEventListener('change', (event) => setFile(event.target.files?.[0]));
 ui.selectButton.addEventListener('click', () => ui.input.click());
 ui.process.addEventListener('click', processVideo);
+ui.targetDuration.addEventListener('change', () => {
+  ui.customDurationRow.hidden = ui.targetDuration.value !== 'custom';
+});
 ui.share.addEventListener('click', async () => {
   if (!outputFile || typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function' || !navigator.canShare({ files: [outputFile] })) {
     toast(t('shareUnavailable'));

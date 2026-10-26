@@ -8,11 +8,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="2One" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
-    <meta name="description" content="هر ویدیویی را برای YouTube Shorts و ویدیوهای کوتاه به کمتر از یک دقیقه برسانید. رایگان، خصوصی و در مرورگر شما." />
-    <meta property="og:title" content="2One — ویدیوی خود را به کمتر از یک دقیقه برسانید" />
-    <meta property="og:description" content="ویدیوت را در مرورگر برای Shorts کوتاه کن. فایل روی دستگاهت می‌ماند." />
+    <meta name="description" content="مدت ویدیو را روی ۳۰ یا ۵۹ ثانیه، ۲ یا ۳ دقیقه یا زمان دلخواه تنظیم کنید. پردازش خصوصی در مرورگر انجام می‌شود." />
+    <meta property="og:title" content="2One — تنظیم مدت ویدیو برای ویدیوهای کوتاه" />
+    <meta property="og:description" content="مدت خروجی را انتخاب کنید و لحظه‌های ثابت را در مرورگر کوتاه کنید. فایل روی دستگاه شما می‌ماند." />
     <meta property="og:type" content="website" />
-    <title>2One — ویدیوی خود را به کمتر از یک دقیقه برسانید</title>
+    <title>2One — تنظیم مدت ویدیو برای ویدیوهای کوتاه</title>
   </head>
   <body>
     <div class="app-shell">
@@ -27,8 +27,8 @@
         <section class="studio" aria-labelledby="title">
           <div class="intro">
             <p class="eyebrow" data-t="eyebrow">یک ویدیوی کوتاه‌تر، در چند لحظه</p>
-            <h1 id="title" data-t="title">ویدیوی خود را به کمتر از یک دقیقه برسانید!</h1>
-            <p class="lede" data-t="lede">ویدیو را انتخاب کن. همان‌جا در مرورگر، آن را ۵۹ ثانیه‌ای می‌کنیم.</p>
+            <h1 id="title" data-t="title">مدت ویدیوی خود را انتخاب کنید!</h1>
+            <p class="lede" data-t="lede">ویدیو را انتخاب کنید؛ پردازش در مرورگر انجام می‌شود.</p>
           </div>
           <input id="videoInput" type="file" accept="video/*,.mov,.mp4,.m4v,.webm" hidden />
           <button id="selectButton" class="upload-button" type="button">
@@ -43,10 +43,22 @@
               <button id="removeFile" class="icon-button" type="button" data-aria="remove" aria-label="حذف ویدیو">×</button>
             </div>
             <video id="sourcePreview" class="source-preview" controls playsinline hidden></video>
-            <label class="audio-option duration-option" for="fitTo59">
-              <input id="fitTo59" type="checkbox" checked />
-              <span><strong>تنظیم روی ۵۹ ثانیه</strong><small>مدت ویدیو دقیقاً به ۵۹ ثانیه تنظیم می‌شود.</small></span>
-            </label>
+            <div class="audio-option duration-option">
+              <label for="targetDuration"><strong>مدت ویدیو</strong><small>زمان خروجی را انتخاب کن.</small></label>
+              <select id="targetDuration">
+                <option value="59" selected>۵۹ ثانیه</option>
+                <option value="30">۳۰ ثانیه</option>
+                <option value="120">۲ دقیقه</option>
+                <option value="180">۳ دقیقه</option>
+                <option value="custom">زمان دلخواه…</option>
+                <option value="auto">فقط کوتاه‌کردن لحظه‌های ثابت</option>
+              </select>
+            </div>
+            <div id="customDurationRow" class="audio-option custom-duration" hidden>
+              <label for="customDuration">زمان دلخواه</label>
+              <input id="customDuration" type="number" min="1" max="3600" step="1" value="59" inputmode="numeric" />
+              <span>ثانیه</span>
+            </div>
             <label class="audio-option" for="removeAudio">
               <input id="removeAudio" type="checkbox" />
               <span><strong>حذف صدا</strong><small>اگر صدای سریع‌شده واضح نیست، فعالش کن.</small></span>

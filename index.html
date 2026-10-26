@@ -8,11 +8,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="2One" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
-    <meta name="description" content="Make any video under one minute for YouTube Shorts and short-form video. Free, private, and processed in your browser." />
-    <meta property="og:title" content="2One — Make your video under one minute" />
-    <meta property="og:description" content="Shorten a video for Shorts in your browser. Your file stays on your device." />
+    <meta name="description" content="Set a video to 30 seconds, 59 seconds, 2 minutes, 3 minutes, or a custom length. Process it privately in your browser." />
+    <meta property="og:title" content="2One — Set your video to the length you need" />
+    <meta property="og:description" content="Choose a target length and shorten still moments in your browser. Your file stays on your device." />
     <meta property="og:type" content="website" />
-    <title>2One — Make your video under one minute</title>
+    <title>2One — Set your video to the length you need</title>
   </head>
   <body>
     <div class="app-shell">
@@ -28,8 +28,8 @@
         <section class="studio" aria-labelledby="title">
           <div class="intro">
             <p class="eyebrow" data-t="eyebrow">A SHORTER VIDEO, IN A MOMENT</p>
-            <h1 id="title" data-t="title">Make your video<br />under one minute.</h1>
-            <p class="lede" data-t="lede">Choose a video. We’ll make it 59 seconds, right in your browser.</p>
+            <h1 id="title" data-t="title">Set your video to the length you need.</h1>
+            <p class="lede" data-t="lede">Choose a target length, right in your browser.</p>
           </div>
 
           <input id="videoInput" type="file" accept="video/*,.mov,.mp4,.m4v,.webm" hidden />
@@ -46,10 +46,22 @@
               <button id="removeFile" class="icon-button" type="button" data-aria="remove" aria-label="Remove video">×</button>
             </div>
             <video id="sourcePreview" class="source-preview" controls playsinline hidden></video>
-            <label class="audio-option duration-option" for="fitTo59">
-              <input id="fitTo59" type="checkbox" checked />
-              <span><strong>Fit to 59 seconds</strong><small>Adjust the video to exactly 59 seconds.</small></span>
-            </label>
+            <div class="audio-option duration-option">
+              <label for="targetDuration"><strong>Video length</strong><small>Choose the final duration.</small></label>
+              <select id="targetDuration">
+                <option value="59" selected>59 seconds</option>
+                <option value="30">30 seconds</option>
+                <option value="120">2 minutes</option>
+                <option value="180">3 minutes</option>
+                <option value="custom">Custom…</option>
+                <option value="auto">Shorten still moments</option>
+              </select>
+            </div>
+            <div id="customDurationRow" class="audio-option custom-duration" hidden>
+              <label for="customDuration">Custom length</label>
+              <input id="customDuration" type="number" min="1" max="3600" step="1" value="59" inputmode="numeric" />
+              <span>seconds</span>
+            </div>
             <label class="audio-option" for="removeAudio">
               <input id="removeAudio" type="checkbox" />
               <span><strong>Remove audio</strong><small>Use if the sped-up sound feels distorted.</small></span>
