@@ -77,7 +77,7 @@ h1{margin:0;color:#202124;font-size:clamp(34px,7vw,47px);line-height:1.16;letter
 
 @media(max-width:600px){
   body{min-height:100dvh;background:#f8f7f4}
-  .app-shell{width:100%;min-height:100svh;min-height:100dvh;padding:env(safe-area-inset-top) 22px env(safe-area-inset-bottom)}
+  .app-shell{width:100%;min-height:100svh;min-height:100dvh;padding:env(safe-area-inset-top) 22px calc(126px + env(safe-area-inset-bottom))}
   .topbar{height:64px;flex:none;border-bottom-color:#eeede8}
   .brand{font-size:19px}
   .topbar-links{gap:7px}
@@ -95,11 +95,12 @@ h1{margin:0;color:#202124;font-size:clamp(34px,7vw,47px);line-height:1.16;letter
   .privacy-note{margin-top:12px;font-size:11px}
   .file-panel{margin-top:20px}
   .source-preview{max-height:40svh}
-  .site-footer{margin-top:auto;padding:17px 0 10px}
+  .site-footer{position:fixed;z-index:15;inset-inline:0;bottom:0;margin:0;padding:13px 22px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#f8f7f4;box-shadow:0 -8px 24px rgb(32 33 36 / 3%)}
   .footer-top{align-items:flex-start;gap:10px}
   .footer-brand{font-size:13px}
   .contribute-link{max-width:calc(100% - 48px);font-size:10px;line-height:1.4;text-align:end}
   .footer-credit,.breadcrumbs{font-size:10px}
+  .toast{bottom:calc(132px + env(safe-area-inset-bottom))}
   .about-page{margin:50px auto 64px}
   .about-lede{margin:17px 0 39px;font-size:15px}
   .about-section{margin-top:29px}
