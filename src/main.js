@@ -171,6 +171,15 @@ function stopActivityTimer() {
   activityDetail = '';
 }
 
+function scrollToElement(element) {
+  requestAnimationFrame(() => {
+    element.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'center',
+    });
+  });
+}
+
 function showError(message) {
   ui.engineProgress.classList.remove('indeterminate');
   ui.engineTitle.textContent = t('error');
@@ -377,6 +386,8 @@ async function processVideo() {
   ui.result.hidden = true;
   ui.engine.hidden = false;
   ui.engineProgress.style.background = '';
+  setProgress(null, t('read'), t('readingLocal'));
+  scrollToElement(ui.engine);
   let inputName = '2one_input';
   let outputName = '2one_output.mp4';
   try {
@@ -442,6 +453,7 @@ async function processVideo() {
     ui.resultDetails.textContent = t('result', prettyDuration(outputDuration), allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength), hasAudio && !keepAudio);
     ui.result.hidden = false;
     setProgress(100, t('complete'), t('kept'));
+    scrollToElement(ui.result);
     toast(t('toastReady'));
     try { await ffmpeg.deleteFile(inputName); await ffmpeg.deleteFile(outputName); } catch { /* cleaned when next file is loaded */ }
   } catch (error) {
