@@ -9,8 +9,9 @@ const copy = {
     engineLoading: 'Downloading video engine', engineCached: 'Loading saved video engine', engineSize: 'About 31 MB the first time · saved in this browser when possible',
     loadedFromCache: 'Loaded from this browser',
     coreFile: 'Runtime', coreEngine: 'Video engine', local: 'on this device', initialize: 'Starting video engine', wait: 'This may take a moment',
-    read: 'Reading video', readingLocal: 'Opening video in your browser', detect: 'Finding still moments', detecting: 'Checking for still frames',
+    read: 'Reading video', readingLocal: 'Opening video in your browser', preparingFile: 'Preparing the video for processing', detect: 'Finding still moments', detecting: 'Scanning video frames',
     making: 'Processing your video', keepFrames: 'Keeping every source frame', makeAgain: 'Make another video',
+    workingFor: (elapsed) => `Still working · ${elapsed} elapsed`,
     doneDownload: 'Preparing download', finishing: 'Getting your video ready', complete: 'Your video is ready', kept: 'All frames kept · Processed on your device',
     error: 'Could not process video', retry: 'Try again', invalid: 'Please choose a video file.', unsupported: 'Your browser could not open this video.', durationError: 'Could not read the video duration.', noSegments: 'Could not analyze this video.',
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
@@ -27,8 +28,9 @@ const copy = {
     engineLoading: 'دریافت موتور ویدیو', engineCached: 'بارگذاری نسخهٔ ذخیره‌شده', engineSize: 'اولین‌بار حدود ۳۱ مگابایت · در صورت امکان در این مرورگر ذخیره می‌شود',
     loadedFromCache: 'از کش مرورگر بارگذاری شد',
     coreFile: 'فایل اجرایی', coreEngine: 'موتور ویدیو', local: 'روی دستگاه تو', initialize: 'راه‌اندازی موتور ویدیو', wait: 'این مرحله ممکن است کمی طول بکشد',
-    read: 'خواندن ویدیو', readingLocal: 'ویدیو در مرورگر باز می‌شود', detect: 'پیداکردن بخش‌های ثابت', detecting: 'بررسی فریم‌های ثابت',
+    read: 'خواندن ویدیو', readingLocal: 'ویدیو در مرورگر باز می‌شود', preparingFile: 'آماده‌سازی ویدیو برای پردازش', detect: 'پیداکردن بخش‌های ثابت', detecting: 'در حال بررسی فریم‌های ویدیو',
     making: 'پردازش ویدیو', keepFrames: 'تمام فریم‌های منبع حفظ می‌شوند', makeAgain: 'ساخت ویدیوی دیگر',
+    workingFor: (elapsed) => `هنوز در حال انجام · ${elapsed}`,
     doneDownload: 'آماده‌کردن دانلود', finishing: 'ویدیو در حال آماده‌شدن است', complete: 'ویدیوت آماده است', kept: 'همهٔ فریم‌ها حفظ شدند · پردازش روی دستگاه تو',
     error: 'پردازش ویدیو انجام نشد', retry: 'تلاش دوباره', invalid: 'لطفاً یک فایل ویدیویی انتخاب کن.', unsupported: 'مرورگر نتوانست این ویدیو را باز کند.', durationError: 'مدت ویدیو قابل‌خواندن نیست.', noSegments: 'تحلیل ویدیو انجام نشد.',
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
@@ -89,6 +91,9 @@ let outputFile;
 let toastTimer;
 let activeLogs = null;
 let detectedFps = 30;
+let activityTimer;
+let activityStartedAt = 0;
+let activityDetail = '';
 
 async function waitForEngineCache(url, timeoutMs = 8000) {
   const controller = navigator.serviceWorker?.controller;
@@ -137,10 +142,32 @@ function setProgress(value, title, detail) {
   const clamped = indeterminate ? 0 : Math.min(100, Math.max(0, value));
   ui.engine.hidden = false;
   ui.engineTitle.textContent = title;
-  if (detail) ui.engineText.textContent = detail;
+  if (detail) activityDetail = detail;
+  if (activityTimer && activityDetail) updateActivityText();
+  else if (detail) ui.engineText.textContent = detail;
   ui.enginePercent.textContent = indeterminate ? '…' : isPersian ? `${Math.round(clamped).toLocaleString('fa-IR')}٪` : `${Math.round(clamped)}%`;
   ui.engineProgress.classList.toggle('indeterminate', indeterminate);
   ui.engineProgress.style.width = `${clamped}%`;
+}
+
+function startActivityTimer() {
+  clearInterval(activityTimer);
+  activityStartedAt = performance.now();
+  activityTimer = setInterval(updateActivityText, 5000);
+  updateActivityText();
+}
+
+function updateActivityText() {
+  if (!activityDetail) return;
+  const seconds = Math.floor((performance.now() - activityStartedAt) / 1000);
+  const elapsed = `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  ui.engineText.textContent = `${activityDetail} · ${t('workingFor', isPersian ? elapsed.replace(/\d/g, (digit) => '۰۱۲۳۴۵۶۷۸۹'[digit]) : elapsed)}`;
+}
+
+function stopActivityTimer() {
+  clearInterval(activityTimer);
+  activityTimer = undefined;
+  activityDetail = '';
 }
 
 function showError(message) {
@@ -353,18 +380,29 @@ async function processVideo() {
   let outputName = '2one_output.mp4';
   try {
     await loadEngine();
-    setProgress(4, t('read'), t('readingLocal'));
+    setProgress(null, t('read'), t('readingLocal'));
     const info = await readVideoInfo(chosenFile);
     if (!Number.isFinite(info.duration) || info.duration <= 0) throw new Error(t('durationError'));
     const ext = chosenFile.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
     inputName = `2one_input.${ext}`;
-    await ffmpeg.writeFile(inputName, new Uint8Array(await chosenFile.arrayBuffer()));
+    setProgress(null, t('read'), t('preparingFile'));
+    startActivityTimer();
+    try {
+      await ffmpeg.writeFile(inputName, new Uint8Array(await chosenFile.arrayBuffer()));
+    } finally {
+      stopActivityTimer();
+    }
 
-    setProgress(12, t('detect'), t('detecting'));
+    setProgress(null, t('detect'), t('detecting'));
+    startActivityTimer();
     const analysisLogs = [];
     detectedFps = 30;
     activeLogs = analysisLogs;
-    await ffmpeg.exec(['-hide_banner', '-i', inputName, '-vf', 'freezedetect=n=-45dB:d=1', '-an', '-f', 'null', '-']);
+    try {
+      await ffmpeg.exec(['-hide_banner', '-i', inputName, '-vf', 'freezedetect=n=-45dB:d=1', '-an', '-f', 'null', '-']);
+    } finally {
+      stopActivityTimer();
+    }
     activeLogs = null;
     const pauses = extractFreezeSpans(analysisLogs, info.duration);
     const segments = makeSegments(info.duration, pauses);
@@ -374,15 +412,20 @@ async function processVideo() {
     const keepAudio = hasAudio && !ui.removeAudio.checked;
     const filters = createTimeline(segments, allocation.durations, keepAudio);
 
-    setProgress(25, t('making'), isPersian ? `${allocation.freezeCount.toLocaleString('fa-IR')} بخش ثابت پیدا شد` : `${allocation.freezeCount.toLocaleString('en-US')} still moments found`);
+    setProgress(null, t('making'), isPersian ? `${allocation.freezeCount.toLocaleString('fa-IR')} بخش ثابت پیدا شد` : `${allocation.freezeCount.toLocaleString('en-US')} still moments found`);
     const args = ['-hide_banner', '-i', inputName, '-filter_complex', filters, '-map', '[vout]'];
     if (keepAudio) args.push('-map', '[aout]', '-c:a', 'aac', '-b:a', '160k');
     args.push('-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '24', '-pix_fmt', 'yuv420p',
       '-fps_mode', 'passthrough', '-enc_time_base', '1:1000000', '-video_track_timescale', '1000000',
       ...(targetSeconds !== null ? ['-t', targetSeconds.toFixed(6)] : []), '-movflags', '+faststart', outputName);
     encodingVideo = true;
-    await ffmpeg.exec(args);
-    encodingVideo = false;
+    startActivityTimer();
+    try {
+      await ffmpeg.exec(args);
+    } finally {
+      encodingVideo = false;
+      stopActivityTimer();
+    }
     setProgress(98, t('doneDownload'), t('finishing'));
     const data = await ffmpeg.readFile(outputName);
     if (outputUrl) URL.revokeObjectURL(outputUrl);
@@ -407,6 +450,7 @@ async function processVideo() {
     showError(error?.message || t('unknown'));
     toast(error?.message || t('unknown'));
   } finally {
+    stopActivityTimer();
     busy = false;
     ui.remove.disabled = false;
     ui.process.disabled = !chosenFile;
