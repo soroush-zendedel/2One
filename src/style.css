@@ -49,7 +49,20 @@ h1{margin:0;color:#202124;font-size:clamp(34px,7vw,47px);line-height:1.16;letter
 .result-card>span{flex:1;color:var(--muted);font-size:11px}
 .download-button{padding:8px 11px;border:1px solid var(--line);border-radius:6px;color:#202124;text-decoration:none;font-size:12px;font-weight:600}
 .download-button:hover{background:#f4f3ef}
-footer{min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:1px solid var(--line);color:#777772;font-size:11px}
+.site-footer{margin-top:48px;padding:20px 0 18px;border-top:1px solid var(--line);color:#777772}
+.footer-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.footer-brand{color:#202124;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:-.5px}
+.contribute-link{display:inline-flex;align-items:center;gap:6px;color:#555651;text-decoration:none;font-size:12px}
+.contribute-link:hover{color:#111;text-decoration:underline;text-underline-offset:3px}
+.footer-credit{margin:11px 0 0;font-size:11px;line-height:1.5}
+.breadcrumbs{margin-top:13px;font-size:11px}
+.breadcrumbs ol{display:flex;flex-wrap:wrap;align-items:center;gap:0;margin:0;padding:0;list-style:none}
+.breadcrumbs li{display:inline-flex;align-items:center;gap:9px}
+.breadcrumbs li+li::before{content:"/";color:#aaa9a3}
+.breadcrumbs li+li{margin-inline-start:9px}
+.breadcrumbs a{color:#777772;text-decoration:none}
+.breadcrumbs a:hover{text-decoration:underline;text-underline-offset:3px}
+.breadcrumbs [aria-current=page]{color:#434440}
 .about-page{width:min(100%,680px);margin:88px auto 100px}
 .about-page h1{font-size:clamp(34px,6vw,49px);line-height:1.2}
 .about-lede{max-width:580px;margin:21px 0 54px;color:#62635e;font-size:17px;line-height:1.7}
@@ -82,8 +95,11 @@ footer{min-height:64px;display:flex;align-items:center;justify-content:space-bet
   .privacy-note{margin-top:12px;font-size:11px}
   .file-panel{margin-top:20px}
   .source-preview{max-height:40svh}
-  footer{min-height:48px;margin-top:auto;border:0;font-size:10px}
-  footer span:last-child{display:none}
+  .site-footer{margin-top:auto;padding:17px 0 10px}
+  .footer-top{align-items:flex-start;gap:10px}
+  .footer-brand{font-size:13px}
+  .contribute-link{max-width:calc(100% - 48px);font-size:10px;line-height:1.4;text-align:end}
+  .footer-credit,.breadcrumbs{font-size:10px}
   .about-page{margin:50px auto 64px}
   .about-lede{margin:17px 0 39px;font-size:15px}
   .about-section{margin-top:29px}
