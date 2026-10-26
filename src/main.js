@@ -2,11 +2,13 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import './style.css';
 
 const CORE_BASE = `${import.meta.env.BASE_URL}ffmpeg/`;
+const ENGINE_CACHE = '2one-engine-v1';
 const TARGET_SECONDS = 59;
 const isPersian = document.documentElement.lang === 'fa';
 const copy = {
   en: {
-    engineLoading: 'Loading video engine', engineSize: 'About 31 MB · downloaded once and cached on this device',
+    engineLoading: 'Downloading video engine', engineCached: 'Loading saved video engine', engineSize: 'About 31 MB the first time · saved in this browser when possible',
+    loadedFromCache: 'Loaded from this browser',
     coreFile: 'Runtime', coreEngine: 'Video engine', local: 'on this device', initialize: 'Starting video engine', wait: 'This may take a moment',
     read: 'Reading video', readingLocal: 'Opening video in your browser', detect: 'Finding still moments', detecting: 'Checking for still frames',
     making: 'Making your 59-second video', keepFrames: 'Keeping every source frame', makeAgain: 'Make another video',
@@ -15,13 +17,14 @@ const copy = {
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
     readingMetadata: (size) => `Reading video · ${size}`,
     result: (count, size) => `59 seconds · ${size} · ${count} still moments shortened`,
-    progressBytes: (received, total) => `${received} of ${total} · downloaded to this device`,
+    progressBytes: (received, total, cached) => `${received} of ${total} · ${cached ? 'saved copy' : 'downloaded'}`,
     received: (received) => `${received} downloaded · video engine`,
     failed: (name, status) => `Could not download ${name} (${status}).`,
     toastReady: 'Your video is ready to download.', unknown: 'Video processing failed.',
   },
   fa: {
-    engineLoading: 'دریافت موتور ویدیو', engineSize: 'حدود ۳۱ مگابایت · یک‌بار دریافت و روی دستگاه ذخیره می‌شود',
+    engineLoading: 'دریافت موتور ویدیو', engineCached: 'بارگذاری نسخهٔ ذخیره‌شده', engineSize: 'اولین‌بار حدود ۳۱ مگابایت · در صورت امکان در این مرورگر ذخیره می‌شود',
+    loadedFromCache: 'از کش مرورگر بارگذاری شد',
     coreFile: 'فایل اجرایی', coreEngine: 'موتور ویدیو', local: 'روی دستگاه تو', initialize: 'راه‌اندازی موتور ویدیو', wait: 'این مرحله ممکن است کمی طول بکشد',
     read: 'خواندن ویدیو', readingLocal: 'ویدیو در مرورگر باز می‌شود', detect: 'پیداکردن بخش‌های ثابت', detecting: 'بررسی فریم‌های ثابت',
     making: 'ساخت ویدیوی ۵۹ثانیه‌ای', keepFrames: 'تمام فریم‌های منبع حفظ می‌شوند', makeAgain: 'ساخت ویدیوی دیگر',
@@ -30,7 +33,7 @@ const copy = {
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
     readingMetadata: (size) => `در حال خواندن ویدیو · ${size}`,
     result: (count, size) => `۵۹ ثانیه · ${size} · ${count} بخش ثابت کوتاه شد`,
-    progressBytes: (received, total) => `${received} از ${total} · روی دستگاه دریافت شد`,
+    progressBytes: (received, total, cached) => `${received} از ${total} · ${cached ? 'نسخهٔ ذخیره‌شده' : 'در حال دریافت'}`,
     received: (received) => `${received} دریافت شد · موتور ویدیو`,
     failed: (name, status) => `دریافت ${name} ناموفق بود (${status}).`,
     toastReady: 'ویدیوت آمادهٔ دانلود است.', unknown: 'پردازش ویدیو ناموفق بود.',
@@ -40,6 +43,27 @@ const t = (key, ...args) => {
   const value = copy[isPersian ? 'fa' : 'en'][key];
   return typeof value === 'function' ? value(...args) : value;
 };
+const serviceWorkerReady = (async () => {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return null;
+  try {
+    const scriptURL = new URL(`${import.meta.env.BASE_URL}sw.js`, window.location.href);
+    await navigator.serviceWorker.register(scriptURL, { scope: import.meta.env.BASE_URL });
+    await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((resolve) => setTimeout(resolve, 5000)),
+    ]);
+    if (!navigator.serviceWorker.controller) {
+      await Promise.race([
+        new Promise((resolve) => navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true })),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
+    }
+    return navigator.serviceWorker.controller;
+  } catch (error) {
+    console.warn('Engine caching is unavailable in this browser.', error);
+    return null;
+  }
+})();
 const $ = (id) => document.getElementById(id);
 const ui = {
   input: $('videoInput'), selectButton: $('selectButton'), process: $('processButton'),
@@ -59,6 +83,32 @@ let outputUrl;
 let toastTimer;
 let activeLogs = null;
 let detectedFps = 30;
+
+async function waitForEngineCache(url, timeoutMs = 8000) {
+  const controller = navigator.serviceWorker?.controller;
+  if (!controller || typeof MessageChannel === 'undefined') {
+    try { return Boolean(await (await caches.open(ENGINE_CACHE)).match(url)); } catch { return false; }
+  }
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    const timer = setTimeout(() => {
+      channel.port1.close();
+      resolve(false);
+    }, timeoutMs);
+    channel.port1.onmessage = ({ data }) => {
+      clearTimeout(timer);
+      channel.port1.close();
+      resolve(Boolean(data?.cached));
+    };
+    controller.postMessage({ type: 'CHECK_ENGINE_CACHE', url }, [channel.port2]);
+  });
+}
+
+async function requestPersistentStorage() {
+  try {
+    if (navigator.storage?.persist) await navigator.storage.persist();
+  } catch { /* browser-managed storage remains best-effort */ }
+}
 
 function toast(message) {
   ui.toast.textContent = message;
@@ -94,8 +144,17 @@ function showError(message) {
 }
 
 async function preloadAsset(url, rangeStart, rangeEnd, name) {
-  const response = await fetch(url, { cache: 'force-cache' });
+  let cache;
+  let cachedResponse;
+  try {
+    cache = await caches.open(ENGINE_CACHE);
+    cachedResponse = await cache.match(url);
+  } catch { /* Cache Storage may be unavailable or full. */ }
+  const fromCache = Boolean(cachedResponse);
+  const response = cachedResponse || await fetch(url, { cache: 'force-cache' });
   if (!response.ok) throw new Error(t('failed', name, response.status));
+  const backupResponse = fromCache ? null : response.clone();
+  const title = () => `${t(fromCache ? 'engineCached' : 'engineLoading')} · ${name}`;
   const total = Number(response.headers.get('content-length')) || 0;
   const reader = response.body.getReader();
   let received = 0;
@@ -105,12 +164,19 @@ async function preloadAsset(url, rangeStart, rangeEnd, name) {
     received += value.byteLength;
     if (total) {
       const fraction = Math.min(1, received / total);
-      setProgress(rangeStart + fraction * (rangeEnd - rangeStart), `${t('engineLoading')} · ${name}`,
-        t('progressBytes', prettySize(received), prettySize(total)));
+      setProgress(rangeStart + fraction * (rangeEnd - rangeStart), title(),
+        t('progressBytes', prettySize(received), prettySize(total), fromCache));
     } else {
       setProgress(rangeStart + ((received / (30 * 1024 * 1024)) * (rangeEnd - rangeStart)) % (rangeEnd - rangeStart),
-        `${t('engineLoading')} · ${name}`, t('received', prettySize(received)));
+        title(), fromCache ? t('loadedFromCache') : t('received', prettySize(received)));
     }
+  }
+  if (!fromCache) {
+    const storedByWorker = await waitForEngineCache(url);
+    if (!storedByWorker && cache && backupResponse) {
+      try { await cache.put(url, backupResponse); } catch { /* processing can continue without saved cache */ }
+    }
+    await requestPersistentStorage();
   }
   return url;
 }
@@ -121,6 +187,7 @@ async function loadEngine() {
   setProgress(0, t('engineLoading'), t('engineSize'));
   ui.process.disabled = true;
   try {
+    await serviceWorkerReady;
     const coreUrl = new URL(`${CORE_BASE}ffmpeg-core.js`, window.location.href).href;
     const wasmUrl = new URL(`${CORE_BASE}ffmpeg-core.wasm`, window.location.href).href;
     await preloadAsset(coreUrl, 0, 8, t('coreFile'));

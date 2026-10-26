@@ -36,7 +36,8 @@ The workflow in `.github/workflows/pages.yml` builds and deploys the site when c
 ## Privacy and processing
 
 - The video is processed in browser memory and a temporary WebAssembly filesystem. It is not uploaded.
-- On the first processing run, the browser loads the local FFmpeg WebAssembly engine (about 31 MB). The interface shows download progress; the browser can cache these files for later visits.
+- On the first processing run, the browser loads the local FFmpeg WebAssembly engine (about 31 MB). A service worker stores the engine files in Cache Storage so later visits can reuse them without another download.
+- Browser storage is best-effort by default. Browsers may evict cached data under storage pressure, and users can clear it in site settings. 2One requests persistent storage where supported, but the browser decides whether to grant it.
 - Large videos depend on available device memory and browser limits. Processing may take longer on phones.
 - The timeline is retimed to 59 seconds. If moving sections alone exceed the target, they are sped up too. Source frames are retained.
 
