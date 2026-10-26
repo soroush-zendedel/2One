@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f8f7f4" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="2One" />
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <meta name="description" content="هر ویدیویی را برای YouTube Shorts و ویدیوهای کوتاه به کمتر از یک دقیقه برسانید. رایگان، خصوصی و در مرورگر شما." />
+    <meta property="og:title" content="2One — ویدیوت را به کمتر از یک دقیقه برسان" />
+    <meta property="og:description" content="ویدیوت را در مرورگر برای Shorts کوتاه کن. فایل روی دستگاهت می‌ماند." />
+    <meta property="og:type" content="website" />
+    <title>2One — ویدیوت را به کمتر از یک دقیقه برسان</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="../" aria-label="صفحه اصلی 2One">2One</a>
+        <nav class="topbar-links" aria-label="ناوبری اصلی">
+          <a href="about.html" data-t="aboutLink">درباره</a>
+          <a class="language-link" href="../" lang="en" hreflang="en" data-t="languageLink">English</a>
+        </nav>
+      </header>
+      <main id="main">
+        <section class="studio" aria-labelledby="title">
+          <div class="intro">
+            <p class="eyebrow" data-t="eyebrow">یک ویدیوی کوتاه‌تر، در چند لحظه</p>
+            <h1 id="title" data-t="title">ویدیوت را به<br />کمتر از یک دقیقه برسان.</h1>
+            <p class="lede" data-t="lede">ویدیو را انتخاب کن. همان‌جا در مرورگر، آن را ۵۹ ثانیه‌ای می‌کنیم.</p>
+          </div>
+          <input id="videoInput" type="file" accept="video/*,.mov,.mp4,.m4v,.webm" hidden />
+          <button id="selectButton" class="upload-button" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M4 15.5v3A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-3" /></svg>
+            <span data-t="upload">انتخاب ویدیو</span>
+          </button>
+          <p class="privacy-note" data-t="privacy">ویدیوی تو روی دستگاهت می‌ماند.</p>
+          <section id="filePanel" class="file-panel" hidden aria-live="polite">
+            <div class="file-row">
+              <div class="file-icon" aria-hidden="true">▶</div>
+              <div class="file-info"><strong id="fileName"></strong><span id="fileDetails"></span></div>
+              <button id="removeFile" class="icon-button" type="button" data-aria="remove" aria-label="حذف ویدیو">×</button>
+            </div>
+            <video id="sourcePreview" class="source-preview" controls playsinline hidden></video>
+            <button id="processButton" class="process-button" type="button" disabled data-t="makeShort">۵۹ ثانیه‌ای کن</button>
+            <div id="engineCard" class="engine-card" hidden aria-live="polite">
+              <div class="progress-label"><span id="engineTitle"></span><span id="enginePercent"></span></div>
+              <p id="engineText"></p>
+              <div class="progress-track"><span id="engineProgress"></span></div>
+            </div>
+            <div id="resultCard" class="result-card" hidden>
+              <strong data-t="ready">ویدیوت آماده است.</strong><span id="resultDetails"></span>
+              <a id="downloadButton" class="download-button" href="#" download data-t="download">دانلود ویدیو</a>
+            </div>
+          </section>
+        </section>
+      </main>
+      <footer><span>2One</span><span data-t="footer">راهی ساده برای کوتاه‌کردن ویدیو به کمتر از یک دقیقه.</span></footer>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

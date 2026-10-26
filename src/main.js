@@ -3,14 +3,49 @@ import './style.css';
 
 const CORE_BASE = `${import.meta.env.BASE_URL}ffmpeg/`;
 const TARGET_SECONDS = 59;
+const isPersian = document.documentElement.lang === 'fa';
+const copy = {
+  en: {
+    engineLoading: 'Loading video engine', engineSize: 'About 31 MB · downloaded once and cached on this device',
+    coreFile: 'Runtime', coreEngine: 'Video engine', local: 'on this device', initialize: 'Starting video engine', wait: 'This may take a moment',
+    read: 'Reading video', readingLocal: 'Opening video in your browser', detect: 'Finding still moments', detecting: 'Checking for still frames',
+    making: 'Making your 59-second video', keepFrames: 'Keeping every source frame', makeAgain: 'Make another video',
+    doneDownload: 'Preparing download', finishing: 'Getting your video ready', complete: 'Your video is ready', kept: 'All frames kept · Processed on your device',
+    error: 'Could not process video', retry: 'Try again', invalid: 'Please choose a video file.', unsupported: 'Your browser could not open this video.', durationError: 'Could not read the video duration.', noSegments: 'Could not analyze this video.',
+    fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
+    readingMetadata: (size) => `Reading video · ${size}`,
+    result: (count, size) => `59 seconds · ${size} · ${count} still moments shortened`,
+    progressBytes: (received, total) => `${received} of ${total} · downloaded to this device`,
+    received: (received) => `${received} downloaded · video engine`,
+    failed: (name, status) => `Could not download ${name} (${status}).`,
+    toastReady: 'Your video is ready to download.', unknown: 'Video processing failed.',
+  },
+  fa: {
+    engineLoading: 'دریافت موتور ویدیو', engineSize: 'حدود ۳۱ مگابایت · یک‌بار دریافت و روی دستگاه ذخیره می‌شود',
+    coreFile: 'فایل اجرایی', coreEngine: 'موتور ویدیو', local: 'روی دستگاه تو', initialize: 'راه‌اندازی موتور ویدیو', wait: 'این مرحله ممکن است کمی طول بکشد',
+    read: 'خواندن ویدیو', readingLocal: 'ویدیو در مرورگر باز می‌شود', detect: 'پیداکردن بخش‌های ثابت', detecting: 'بررسی فریم‌های ثابت',
+    making: 'ساخت ویدیوی ۵۹ثانیه‌ای', keepFrames: 'تمام فریم‌های منبع حفظ می‌شوند', makeAgain: 'ساخت ویدیوی دیگر',
+    doneDownload: 'آماده‌کردن دانلود', finishing: 'ویدیو در حال آماده‌شدن است', complete: 'ویدیوت آماده است', kept: 'همهٔ فریم‌ها حفظ شدند · پردازش روی دستگاه تو',
+    error: 'پردازش ویدیو انجام نشد', retry: 'تلاش دوباره', invalid: 'لطفاً یک فایل ویدیویی انتخاب کن.', unsupported: 'مرورگر نتوانست این ویدیو را باز کند.', durationError: 'مدت ویدیو قابل‌خواندن نیست.', noSegments: 'تحلیل ویدیو انجام نشد.',
+    fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
+    readingMetadata: (size) => `در حال خواندن ویدیو · ${size}`,
+    result: (count, size) => `۵۹ ثانیه · ${size} · ${count} بخش ثابت کوتاه شد`,
+    progressBytes: (received, total) => `${received} از ${total} · روی دستگاه دریافت شد`,
+    received: (received) => `${received} دریافت شد · موتور ویدیو`,
+    failed: (name, status) => `دریافت ${name} ناموفق بود (${status}).`,
+    toastReady: 'ویدیوت آمادهٔ دانلود است.', unknown: 'پردازش ویدیو ناموفق بود.',
+  },
+};
+const t = (key, ...args) => {
+  const value = copy[isPersian ? 'fa' : 'en'][key];
+  return typeof value === 'function' ? value(...args) : value;
+};
 const $ = (id) => document.getElementById(id);
 const ui = {
-  input: $('videoInput'), picker: $('filePicker'), pickerTitle: $('pickerTitle'), pickerSub: $('pickerSub'),
-  selectButton: $('selectButton'), process: $('processButton'), buttonLabel: $('buttonLabel'),
-  preview: $('sourcePreview'), previewTitle: $('previewTitle'), previewHint: $('previewHint'),
-  meta: $('fileMeta'), fileName: $('fileName'), fileDetails: $('fileDetails'), remove: $('removeFile'),
+  input: $('videoInput'), selectButton: $('selectButton'), process: $('processButton'),
+  preview: $('sourcePreview'), panel: $('filePanel'), fileName: $('fileName'), fileDetails: $('fileDetails'), remove: $('removeFile'),
   engine: $('engineCard'), engineTitle: $('engineTitle'), engineText: $('engineText'),
-  enginePercent: $('enginePercent'), engineProgress: $('engineProgress'), engineSpinner: $('engineSpinner'),
+  enginePercent: $('enginePercent'), engineProgress: $('engineProgress'),
   result: $('resultCard'), resultDetails: $('resultDetails'), download: $('downloadButton'), toast: $('toast'),
 };
 
@@ -46,13 +81,12 @@ function setProgress(value, title, detail) {
   ui.engine.hidden = false;
   ui.engineTitle.textContent = title;
   if (detail) ui.engineText.textContent = detail;
-  ui.enginePercent.textContent = `${Math.round(clamped).toLocaleString('fa-IR')}٪`;
+  ui.enginePercent.textContent = isPersian ? `${Math.round(clamped).toLocaleString('fa-IR')}٪` : `${Math.round(clamped)}%`;
   ui.engineProgress.style.width = `${clamped}%`;
 }
 
 function showError(message) {
-  ui.engineSpinner.style.animationPlayState = 'paused';
-  ui.engineTitle.textContent = 'پردازش انجام نشد';
+  ui.engineTitle.textContent = t('error');
   ui.engineText.textContent = message;
   ui.enginePercent.textContent = '×';
   ui.engineProgress.style.width = '100%';
@@ -61,7 +95,7 @@ function showError(message) {
 
 async function preloadAsset(url, rangeStart, rangeEnd, name) {
   const response = await fetch(url, { cache: 'force-cache' });
-  if (!response.ok) throw new Error(`دریافت ${name} ناموفق بود (${response.status}).`);
+  if (!response.ok) throw new Error(t('failed', name, response.status));
   const total = Number(response.headers.get('content-length')) || 0;
   const reader = response.body.getReader();
   let received = 0;
@@ -71,11 +105,11 @@ async function preloadAsset(url, rangeStart, rangeEnd, name) {
     received += value.byteLength;
     if (total) {
       const fraction = Math.min(1, received / total);
-      setProgress(rangeStart + fraction * (rangeEnd - rangeStart), `دریافت موتور ویدیو · ${name}`,
-        `${prettySize(received)} از ${prettySize(total)} · موتور محلی`);
+      setProgress(rangeStart + fraction * (rangeEnd - rangeStart), `${t('engineLoading')} · ${name}`,
+        t('progressBytes', prettySize(received), prettySize(total)));
     } else {
       setProgress(rangeStart + ((received / (30 * 1024 * 1024)) * (rangeEnd - rangeStart)) % (rangeEnd - rangeStart),
-        `دریافت موتور ویدیو · ${name}`, `${prettySize(received)} دریافت شد · موتور محلی`);
+        `${t('engineLoading')} · ${name}`, t('received', prettySize(received)));
     }
   }
   return url;
@@ -83,26 +117,25 @@ async function preloadAsset(url, rangeStart, rangeEnd, name) {
 
 async function loadEngine() {
   if (engineReady) return;
-  ui.engineSpinner.style.animationPlayState = 'running';
   ui.engineProgress.style.background = '';
-  setProgress(0, 'دریافت موتور ویدیو', 'حدود ۳۱ مگابایت · فایل‌های موتور همراه سایت هستند');
+  setProgress(0, t('engineLoading'), t('engineSize'));
   ui.process.disabled = true;
   try {
     const coreUrl = new URL(`${CORE_BASE}ffmpeg-core.js`, window.location.href).href;
     const wasmUrl = new URL(`${CORE_BASE}ffmpeg-core.wasm`, window.location.href).href;
-    await preloadAsset(coreUrl, 0, 8, 'فایل اجرایی');
-    await preloadAsset(wasmUrl, 8, 82, 'موتور پردازش');
-    setProgress(85, 'راه‌اندازی موتور ویدیو', 'این مرحله ممکن است چند لحظه طول بکشد');
+    await preloadAsset(coreUrl, 0, 8, t('coreFile'));
+    await preloadAsset(wasmUrl, 8, 82, t('coreEngine'));
+    setProgress(85, t('initialize'), t('wait'));
     ffmpeg ??= new FFmpeg();
     ffmpeg.on('log', ({ message }) => {
       if (activeLogs) activeLogs.push(message);
     });
     ffmpeg.on('progress', ({ progress }) => {
-      if (encodingVideo && Number.isFinite(progress)) setProgress(27 + Math.max(0, Math.min(1, progress)) * 70, 'ساخت ویدیوی ۵۹ ثانیه‌ای', 'همهٔ فریم‌ها در حال حفظ‌شدن هستند');
+      if (encodingVideo && Number.isFinite(progress)) setProgress(27 + Math.max(0, Math.min(1, progress)) * 70, t('making'), t('keepFrames'));
     });
     await ffmpeg.load({ coreURL: coreUrl, wasmURL: wasmUrl });
     engineReady = true;
-    setProgress(100, 'موتور آماده است', 'فایل ویدیو همچنان فقط روی دستگاه تو می‌ماند');
+    setProgress(100, t('complete'), t('local'));
   } catch (error) {
     try { ffmpeg?.terminate(); } catch { /* worker may not have started */ }
     ffmpeg = undefined;
@@ -123,7 +156,7 @@ function readVideoInfo(file) {
     };
     video.onerror = () => {
       URL.revokeObjectURL(tempUrl);
-      reject(new Error('مرورگر نتوانست این ویدیو را باز کند.'));
+      reject(new Error(t('unsupported')));
     };
     video.src = tempUrl;
   });
@@ -230,24 +263,21 @@ async function processVideo() {
   busy = true;
   ui.process.disabled = true;
   ui.remove.disabled = true;
-  ui.picker.style.pointerEvents = 'none';
   ui.result.hidden = true;
   ui.engine.hidden = false;
   ui.engineProgress.style.background = '';
-  ui.engineSpinner.style.animationPlayState = 'running';
-  ui.buttonLabel.textContent = 'در حال آماده‌سازی…';
   let inputName = '2one_input';
   let outputName = '2one_output.mp4';
   try {
     await loadEngine();
-    setProgress(4, 'خواندن ویدیو', 'ویدیو در حافظهٔ مرورگر باز می‌شود');
+    setProgress(4, t('read'), t('readingLocal'));
     const info = await readVideoInfo(chosenFile);
-    if (!Number.isFinite(info.duration) || info.duration <= 0) throw new Error('مدت ویدیو قابل‌خواندن نیست.');
+    if (!Number.isFinite(info.duration) || info.duration <= 0) throw new Error(t('durationError'));
     const ext = chosenFile.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
     inputName = `2one_input.${ext}`;
     await ffmpeg.writeFile(inputName, new Uint8Array(await chosenFile.arrayBuffer()));
 
-    setProgress(12, 'پیداکردن مکث‌ها', 'فریم‌های تکراری در حال شناسایی هستند');
+    setProgress(12, t('detect'), t('detecting'));
     const analysisLogs = [];
     detectedFps = 30;
     activeLogs = analysisLogs;
@@ -255,12 +285,12 @@ async function processVideo() {
     activeLogs = null;
     const pauses = extractFreezeSpans(analysisLogs, info.duration);
     const segments = makeSegments(info.duration, pauses);
-    if (!segments.length) throw new Error('بخش‌های ویدیو شناسایی نشدند.');
+    if (!segments.length) throw new Error(t('noSegments'));
     const allocation = allocateDurations(segments);
     const hasAudio = analysisLogs.some((line) => /\bAudio:/i.test(line));
     const filters = createTimeline(segments, allocation.durations, hasAudio);
 
-    setProgress(25, 'ساخت ویدیوی ۵۹ ثانیه‌ای', `تعداد ${allocation.freezeCount.toLocaleString('fa-IR')} مکث پیدا شد`);
+    setProgress(25, t('making'), isPersian ? `${allocation.freezeCount.toLocaleString('fa-IR')} بخش ثابت پیدا شد` : `${allocation.freezeCount.toLocaleString('en-US')} still moments found`);
     const args = ['-hide_banner', '-i', inputName, '-filter_complex', filters, '-map', '[vout]'];
     if (hasAudio) args.push('-map', '[aout]', '-c:a', 'aac', '-b:a', '160k');
     args.push('-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '24', '-pix_fmt', 'yuv420p',
@@ -269,7 +299,7 @@ async function processVideo() {
     encodingVideo = true;
     await ffmpeg.exec(args);
     encodingVideo = false;
-    setProgress(98, 'آماده‌کردن دانلود', 'خروجی نهایی در حال آماده‌شدن است');
+    setProgress(98, t('doneDownload'), t('finishing'));
     const data = await ffmpeg.readFile(outputName);
     if (outputUrl) URL.revokeObjectURL(outputUrl);
     outputUrl = URL.createObjectURL(new Blob([data], { type: 'video/mp4' }));
@@ -277,28 +307,22 @@ async function processVideo() {
     ui.preview.controls = true;
     ui.preview.hidden = false;
     ui.selectButton.hidden = true;
-    ui.previewTitle.hidden = true;
-    ui.previewHint.hidden = true;
     ui.download.href = outputUrl;
     ui.download.download = `${chosenFile.name.replace(/\.[^.]+$/, '')}_2One.mp4`;
-    ui.resultDetails.textContent = `۵۹ ثانیه · ${prettySize(data.byteLength)} · ${allocation.freezeCount.toLocaleString('fa-IR')} مکث فشرده شد`;
+    ui.resultDetails.textContent = t('result', allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength));
     ui.result.hidden = false;
-    ui.engineSpinner.style.animationPlayState = 'paused';
-    setProgress(100, 'ویدیوت آماده است', 'همهٔ فریم‌ها حفظ شدند؛ ویدیو فقط روی دستگاهت پردازش شد');
-    ui.buttonLabel.textContent = 'ساخت دوبارهٔ ویدیو';
-    toast('ویدیوی شورتس آمادهٔ دانلود است.');
+    setProgress(100, t('complete'), t('kept'));
+    toast(t('toastReady'));
     try { await ffmpeg.deleteFile(inputName); await ffmpeg.deleteFile(outputName); } catch { /* cleaned when next file is loaded */ }
   } catch (error) {
     activeLogs = null;
     encodingVideo = false;
     console.error(error);
-    showError(error?.message || 'یک خطای ناشناخته رخ داد.');
-    ui.buttonLabel.textContent = 'تلاش دوباره';
-    toast(error?.message || 'پردازش ویدیو ناموفق بود.');
+    showError(error?.message || t('unknown'));
+    toast(error?.message || t('unknown'));
   } finally {
     busy = false;
     ui.remove.disabled = false;
-    ui.picker.style.pointerEvents = '';
     ui.process.disabled = !chosenFile;
   }
 }
@@ -306,7 +330,7 @@ async function processVideo() {
 async function setFile(file) {
   if (!file) return;
   if (!file.type.startsWith('video/') && !/\.(mov|mp4|m4v|webm|mkv|avi)$/i.test(file.name)) {
-    toast('لطفاً یک فایل ویدیویی انتخاب کن.');
+    toast(t('invalid'));
     return;
   }
   if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -317,22 +341,16 @@ async function setFile(file) {
   ui.preview.controls = true;
   ui.preview.hidden = false;
   ui.selectButton.hidden = true;
-  ui.previewTitle.hidden = true;
-  ui.previewHint.hidden = true;
-  ui.preview.style.zIndex = '1';
-  ui.meta.hidden = false;
+  ui.panel.hidden = false;
   ui.fileName.textContent = file.name;
-  ui.fileDetails.textContent = `در حال خواندن مدت ویدیو · ${prettySize(file.size)}`;
-  ui.pickerTitle.textContent = 'انتخاب ویدیوی دیگری';
-  ui.pickerSub.textContent = 'برای جایگزینی فایل فعلی لمس کن';
-  ui.buttonLabel.textContent = 'ساخت ویدیوی ۵۹ ثانیه‌ای';
+  ui.fileDetails.textContent = t('readingMetadata', prettySize(file.size));
   ui.process.disabled = false;
   ui.result.hidden = true;
   ui.engine.hidden = true;
   ui.engineProgress.style.width = '0%';
   try {
     const info = await readVideoInfo(file);
-    ui.fileDetails.textContent = `${prettyDuration(info.duration)} · ${prettySize(file.size)} · ${info.width}×${info.height}`;
+    ui.fileDetails.textContent = t('fileDuration', prettyDuration(info.duration), prettySize(file.size), info.width, info.height);
   } catch (error) {
     ui.fileDetails.textContent = prettySize(file.size);
     toast(error.message);
@@ -346,7 +364,7 @@ ui.remove.addEventListener('click', () => {
   if (busy) return;
   chosenFile = null;
   ui.input.value = '';
-  ui.meta.hidden = true;
+  ui.panel.hidden = true;
   ui.result.hidden = true;
   ui.engine.hidden = true;
   ui.preview.pause();
@@ -354,28 +372,12 @@ ui.remove.addEventListener('click', () => {
   ui.preview.load();
   ui.preview.hidden = true;
   ui.selectButton.hidden = false;
-  ui.previewTitle.hidden = false;
-  ui.previewHint.hidden = false;
-  ui.pickerTitle.textContent = 'انتخاب فایل ویدیو';
-  ui.pickerSub.textContent = 'MP4، MOV یا هر ویدیوی گوشی';
-  ui.buttonLabel.textContent = 'اول ویدیو رو انتخاب کن';
   ui.process.disabled = true;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   if (outputUrl) URL.revokeObjectURL(outputUrl);
   previewUrl = null;
   outputUrl = null;
 });
-ui.picker.addEventListener('click', (event) => {
-  if (event.target.closest('button')) return;
-});
-ui.picker.addEventListener('dragover', (event) => { event.preventDefault(); ui.picker.classList.add('dragging'); });
-ui.picker.addEventListener('dragleave', () => ui.picker.classList.remove('dragging'));
-ui.picker.addEventListener('drop', (event) => {
-  event.preventDefault();
-  ui.picker.classList.remove('dragging');
-  setFile(event.dataTransfer.files?.[0]);
-});
-
 window.addEventListener('pagehide', () => {
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   if (outputUrl) URL.revokeObjectURL(outputUrl);

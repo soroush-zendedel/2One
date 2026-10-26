@@ -1,34 +1,45 @@
 # 2One
 
-استودیوی موبایل‌محور برای آماده‌کردن ویدیوهای بازی جهت انتشار به‌صورت Shorts. مکث‌های تصویری را با FFmpeg در مرورگر فشرده می‌کند و خروجی ۵۹ ثانیه‌ای می‌سازد. فریم‌های منبع حذف نمی‌شوند و فایل ویدیو روی دستگاه کاربر می‌ماند.
+2One is a simple, mobile-first video shortener for YouTube Shorts and other short-form video. Choose a video and make it 59 seconds long in your browser. Video processing stays on your device.
 
-## اجرای محلی
+The project began as a way to shorten screen recordings of puzzle games. Their long thinking pauses made them difficult to share as Shorts, so 2One was created to retime still moments while preserving the source frames.
 
-نیازمندی‌ها: Node.js 20 یا بالاتر و pnpm.
+## Languages and pages
+
+- English home: `/`
+- Persian home: `/fa/`
+- English About: `/about.html`
+- Persian About: `/fa/about.html`
+
+English is the default. Use the language link in the header to switch between pages.
+
+## Run locally
+
+Requirements: Node.js 20 or later and pnpm.
 
 ```bash
 pnpm install
 pnpm dev
 ```
 
-نشانی محلی در ترمینال نشان داده می‌شود. برای ساخت نسخهٔ آمادهٔ انتشار:
+For a production build:
 
 ```bash
 pnpm build
 pnpm preview
 ```
 
-## انتشار در GitHub Pages
+## GitHub Pages
 
-Workflow داخل `.github/workflows/pages.yml` با هر push به شاخهٔ `main` پروژه را build و منتشر می‌کند. نام مخزن باید `2One` باشد تا مسیر پایهٔ Vite (`/2One/`) درست شود. در تنظیمات مخزن، بخش **Settings → Pages → Build and deployment** را روی **GitHub Actions** قرار بده.
+The workflow in `.github/workflows/pages.yml` builds and deploys the site when changes are pushed to `main`. The repository should be named `2One` so Vite's base path (`/2One/`) matches. In repository settings, set **Settings → Pages → Build and deployment** to **GitHub Actions**.
 
-## حریم خصوصی و پردازش
+## Privacy and processing
 
-- فایل ویدیو فقط در حافظهٔ مرورگر و فایل‌سیستم موقت WebAssembly استفاده می‌شود و آپلود نمی‌شود.
-- فایل‌های موتور single-thread مربوط به ffmpeg.wasm همراه سایت منتشر می‌شوند. در اولین اجرای پردازش، صفحه دانلود حدود ۳۱ مگابایت موتور را با نوار پیشرفت نمایش می‌دهد؛ ویدیو همچنان محلی می‌ماند.
-- ویدیوهای حجیم به حافظهٔ آزاد دستگاه و محدودیت مرورگر وابسته‌اند. پردازش روی موبایل ممکن است زمان‌بر باشد؛ هنگام پردازش صفحه را نبند.
-- برای هدف ۵۹ ثانیه، زمان فریم‌ها به‌صورت متغیر بازچینی می‌شود. اگر زمان بخش‌های متحرک به‌تنهایی بیشتر از هدف باشد، آن‌ها نیز باید سریع‌تر پخش شوند.
+- The video is processed in browser memory and a temporary WebAssembly filesystem. It is not uploaded.
+- On the first processing run, the browser loads the local FFmpeg WebAssembly engine (about 31 MB). The interface shows download progress; the browser can cache these files for later visits.
+- Large videos depend on available device memory and browser limits. Processing may take longer on phones.
+- The timeline is retimed to 59 seconds. If moving sections alone exceed the target, they are sped up too. Source frames are retained.
 
-## فناوری‌ها
+## Technology
 
-Vite، FFmpeg WebAssembly، JavaScript و CSS ساده. برای اجرای محلی به نصب FFmpeg سیستمی یا پکیج پایتون نیاز نیست.
+Vite, FFmpeg WebAssembly, JavaScript, and CSS. No system FFmpeg install or Python packages are required.
