@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#09090b" />
+    <meta name="description" content="مکث‌های ویدیوی بازی را هوشمندانه فشرده کن و یک ویدیوی ۵۹ ثانیه‌ای بساز؛ همه‌چیز در مرورگر خودت." />
+    <title>2One — ویدیوی کوتاهت آماده‌ست</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#top" aria-label="صفحهٔ اصلی 2One">
+          <span class="brand-mark"><span></span><span></span></span>
+          <span>2One</span>
+        </a>
+        <span class="topbar-tag"><i></i> استودیوی ویدیو</span>
+      </header>
+
+      <main id="top">
+        <section class="intro" aria-labelledby="title">
+          <div class="eyebrow"><span class="sparkle">✳</span> از بازی تا شورتس</div>
+          <h1 id="title">لحظه‌های بازی،<br /><em>بدون مکث.</em></h1>
+          <p class="lede">مکث‌های طولانی رو فشرده کن. تمام فریم‌ها سر جاشون می‌مونن و ویدیوت دقیقاً ۵۹ ثانیه می‌شه.</p>
+        </section>
+
+        <section class="workspace" aria-label="آماده‌سازی ویدیو">
+          <div class="preview-column">
+            <div class="phone-frame" id="dropArea">
+              <div class="phone-top"><span class="camera-dot"></span><span>2ONE STUDIO</span><span class="phone-menu">•••</span></div>
+              <div class="preview-content" id="previewContent">
+                <div class="preview-orbit orbit-one"></div>
+                <div class="preview-orbit orbit-two"></div>
+                <div class="preview-symbol" aria-hidden="true">
+                  <svg viewBox="0 0 72 72" fill="none"><path d="M36 12v48M12 36h48M19 19l34 34M53 19 19 53" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="36" cy="36" r="8" fill="currentColor"/></svg>
+                </div>
+                <div class="preview-copy">
+                  <span class="preview-kicker">YOUR NEXT SHORT</span>
+                  <strong id="previewTitle">بازی‌ات رو<br />اینجا بنداز</strong>
+                  <span class="preview-hint" id="previewHint">یا برای انتخاب ویدیو لمس کن</span>
+                </div>
+                <video id="sourcePreview" class="source-preview" controls playsinline hidden></video>
+                <button class="select-overlay" id="selectButton" type="button" aria-label="انتخاب ویدیو"></button>
+                <div class="preview-bottom"><span>۰۱ / ۰۱</span><span class="preview-bars"><i></i><i></i><i></i><i></i><i></i></span><span>9:16</span></div>
+              </div>
+              <div class="phone-home"><span></span></div>
+            </div>
+            <div class="formats-note"><span class="format-icon">↕</span><span>قالب عمودیِ آمادهٔ Shorts</span><span class="format-size">9:16</span></div>
+          </div>
+
+          <div class="action-column">
+            <div class="section-label"><span class="step-number">۱</span><span>ویدیوت رو انتخاب کن</span></div>
+            <label class="file-picker" id="filePicker" for="videoInput">
+              <span class="upload-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M4 15.5v3A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5v-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <span class="picker-copy"><strong id="pickerTitle">انتخاب فایل ویدیو</strong><small id="pickerSub">MP4، MOV یا هر ویدیوی گوشی</small></span>
+              <span class="picker-arrow">←</span>
+            </label>
+            <input id="videoInput" type="file" accept="video/*,.mov,.mp4,.m4v,.webm" hidden />
+
+            <div class="file-meta" id="fileMeta" hidden>
+              <span class="file-meta-icon">▶</span>
+              <span class="file-meta-copy"><strong id="fileName">video.mov</strong><small id="fileDetails">۰:۰۰ · ۰ MB</small></span>
+              <button class="remove-file" id="removeFile" type="button" aria-label="حذف فایل انتخاب‌شده">×</button>
+            </div>
+
+            <div class="section-label second-step"><span class="step-number">۲</span><span>آماده‌سازی خودکار</span></div>
+            <div class="process-card">
+              <div class="process-card-top">
+                <div><strong>فشرده‌سازی هوشمند</strong><small>فریم‌ها حفظ می‌شن؛ مکث‌ها سریع‌تر رد می‌شن</small></div>
+                <div class="target-badge"><b>59</b><span>ثانیه</span></div>
+              </div>
+              <div class="privacy-line"><span class="lock-icon">⌑</span><span>ویدیو از دستگاهت خارج نمی‌شه</span><span class="privacy-dot"></span></div>
+            </div>
+
+            <button id="processButton" class="primary-button" type="button" disabled>
+              <span id="buttonLabel">اول ویدیو رو انتخاب کن</span><span class="button-arrow">↗</span>
+            </button>
+
+            <div class="engine-card" id="engineCard" hidden aria-live="polite">
+              <div class="engine-head"><span class="engine-spinner" id="engineSpinner"></span><div><strong id="engineTitle">دریافت موتور ویدیو</strong><small id="engineText">فقط بار اول · حدود ۳۱ مگابایت</small></div><span id="enginePercent" class="engine-percent">۰٪</span></div>
+              <div class="progress-track"><span id="engineProgress"></span></div>
+            </div>
+
+            <div class="result-card" id="resultCard" hidden>
+              <div class="result-icon">✓</div><div class="result-copy"><strong>آمادهٔ انتشار!</strong><small id="resultDetails">ویدیوی تو آماده‌ست</small></div>
+              <a class="download-button" id="downloadButton" href="#" download>دانلود ویدیو <span>↓</span></a>
+            </div>
+          </div>
+        </section>
+
+        <section class="trust-row" aria-label="ویژگی‌ها">
+          <div><span class="trust-symbol">◉</span><span>پردازش روی دستگاه تو</span></div>
+          <div><span class="trust-symbol">↗</span><span>بدون آپلود و ثبت‌نام</span></div>
+          <div><span class="trust-symbol">▣</span><span>خروجی دقیقاً ۵۹ ثانیه</span></div>
+        </section>
+      </main>
+      <footer><span>ساخته‌شده برای لحظه‌های بازی تو.</span><span class="footer-mark">2One <i>·</i> پردازش روی دستگاه تو</span></footer>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
