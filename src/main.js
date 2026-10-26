@@ -11,12 +11,13 @@ const copy = {
     loadedFromCache: 'Loaded from this browser',
     coreFile: 'Runtime', coreEngine: 'Video engine', local: 'on this device', initialize: 'Starting video engine', wait: 'This may take a moment',
     read: 'Reading video', readingLocal: 'Opening video in your browser', detect: 'Finding still moments', detecting: 'Checking for still frames',
-    making: 'Making your 59-second video', keepFrames: 'Keeping every source frame', makeAgain: 'Make another video',
+    making: 'Processing your video', keepFrames: 'Keeping every source frame', makeAgain: 'Make another video',
     doneDownload: 'Preparing download', finishing: 'Getting your video ready', complete: 'Your video is ready', kept: 'All frames kept · Processed on your device',
     error: 'Could not process video', retry: 'Try again', invalid: 'Please choose a video file.', unsupported: 'Your browser could not open this video.', durationError: 'Could not read the video duration.', noSegments: 'Could not analyze this video.',
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
     readingMetadata: (size) => `Reading video · ${size}`,
-    result: (count, size, silent) => `59 seconds · ${size} · ${count} still moments shortened${silent ? ' · Audio removed' : ''}`,
+    result: (duration, count, size, silent) => `${duration} · ${size} · ${count} still moments shortened${silent ? ' · Audio removed' : ''}`,
+    fitButton: 'Make it 59 seconds', shortenButton: 'Shorten still moments',
     progressBytes: (received, total, cached) => `${received} of ${total} · ${cached ? 'saved copy' : 'downloaded'}`,
     received: (received) => `${received} downloaded · video engine`,
     failed: (name, status) => `Could not download ${name} (${status}).`,
@@ -27,12 +28,13 @@ const copy = {
     loadedFromCache: 'از کش مرورگر بارگذاری شد',
     coreFile: 'فایل اجرایی', coreEngine: 'موتور ویدیو', local: 'روی دستگاه تو', initialize: 'راه‌اندازی موتور ویدیو', wait: 'این مرحله ممکن است کمی طول بکشد',
     read: 'خواندن ویدیو', readingLocal: 'ویدیو در مرورگر باز می‌شود', detect: 'پیداکردن بخش‌های ثابت', detecting: 'بررسی فریم‌های ثابت',
-    making: 'ساخت ویدیوی ۵۹ثانیه‌ای', keepFrames: 'تمام فریم‌های منبع حفظ می‌شوند', makeAgain: 'ساخت ویدیوی دیگر',
+    making: 'پردازش ویدیو', keepFrames: 'تمام فریم‌های منبع حفظ می‌شوند', makeAgain: 'ساخت ویدیوی دیگر',
     doneDownload: 'آماده‌کردن دانلود', finishing: 'ویدیو در حال آماده‌شدن است', complete: 'ویدیوت آماده است', kept: 'همهٔ فریم‌ها حفظ شدند · پردازش روی دستگاه تو',
     error: 'پردازش ویدیو انجام نشد', retry: 'تلاش دوباره', invalid: 'لطفاً یک فایل ویدیویی انتخاب کن.', unsupported: 'مرورگر نتوانست این ویدیو را باز کند.', durationError: 'مدت ویدیو قابل‌خواندن نیست.', noSegments: 'تحلیل ویدیو انجام نشد.',
     fileDuration: (duration, size, width, height) => `${duration} · ${size} · ${width}×${height}`,
     readingMetadata: (size) => `در حال خواندن ویدیو · ${size}`,
-    result: (count, size, silent) => `۵۹ ثانیه · ${size} · ${count} بخش ثابت کوتاه شد${silent ? ' · صدا حذف شد' : ''}`,
+    result: (duration, count, size, silent) => `${duration} · ${size} · ${count} بخش ثابت کوتاه شد${silent ? ' · صدا حذف شد' : ''}`,
+    fitButton: 'تنظیم روی ۵۹ ثانیه', shortenButton: 'کوتاه‌کردن مکث‌ها',
     progressBytes: (received, total, cached) => `${received} از ${total} · ${cached ? 'نسخهٔ ذخیره‌شده' : 'در حال دریافت'}`,
     received: (received) => `${received} دریافت شد · موتور ویدیو`,
     failed: (name, status) => `دریافت ${name} ناموفق بود (${status}).`,
@@ -68,7 +70,7 @@ const $ = (id) => document.getElementById(id);
 const ui = {
   input: $('videoInput'), selectButton: $('selectButton'), process: $('processButton'),
   preview: $('sourcePreview'), panel: $('filePanel'), fileName: $('fileName'), fileDetails: $('fileDetails'), remove: $('removeFile'),
-  removeAudio: $('removeAudio'),
+  removeAudio: $('removeAudio'), fitTo59: $('fitTo59'),
   engine: $('engineCard'), engineTitle: $('engineTitle'), engineText: $('engineText'),
   enginePercent: $('enginePercent'), engineProgress: $('engineProgress'),
   result: $('resultCard'), resultDetails: $('resultDetails'), download: $('downloadButton'), toast: $('toast'),
@@ -84,6 +86,12 @@ let outputUrl;
 let toastTimer;
 let activeLogs = null;
 let detectedFps = 30;
+let chosenDuration = null;
+
+function updateProcessButton() {
+  const shouldFit = ui.fitTo59.checked && chosenDuration > TARGET_SECONDS;
+  ui.process.textContent = t(shouldFit ? 'fitButton' : 'shortenButton');
+}
 
 async function waitForEngineCache(url, timeoutMs = 8000) {
   const controller = navigator.serviceWorker?.controller;
@@ -265,12 +273,14 @@ function makeSegments(duration, pauses) {
   return segments;
 }
 
-function allocateDurations(segments, pauseOption = 0.3) {
+function allocateDurations(segments, fitTo59, pauseOption = 0.3) {
   const active = segments.filter((s) => !s.frozen).reduce((sum, s) => sum + s.end - s.start, 0);
   const frozen = segments.filter((s) => s.frozen).reduce((sum, s) => sum + s.end - s.start, 0);
   const freezeCount = segments.filter((s) => s.frozen).length;
   let durations;
-  if (active >= TARGET_SECONDS) {
+  if (!fitTo59) {
+    durations = segments.map((s) => s.frozen ? Math.min(s.end - s.start, pauseOption) : s.end - s.start);
+  } else if (active >= TARGET_SECONDS) {
     const pauseBudget = Math.min(frozen, pauseOption * freezeCount, TARGET_SECONDS * 0.1);
     const activeScale = (TARGET_SECONDS - pauseBudget) / active;
     const frozenScale = frozen ? pauseBudget / frozen : 0;
@@ -283,11 +293,14 @@ function allocateDurations(segments, pauseOption = 0.3) {
     durations = segments.map((s) => (s.end - s.start) * scale);
   }
   if (!durations.length) throw new Error('هیچ بخشی برای پردازش پیدا نشد.');
-  durations[durations.length - 1] += TARGET_SECONDS - durations.reduce((a, b) => a + b, 0);
-  const lastRatio = durations.at(-1) / (segments.at(-1).end - segments.at(-1).start);
-  const mappedEnd = TARGET_SECONDS - (1 - lastRatio) / detectedFps;
-  const correction = mappedEnd / durations.reduce((a, b) => a + b, 0);
-  return { durations: durations.map((d) => d * correction), active, frozen, freezeCount };
+  if (fitTo59) {
+    durations[durations.length - 1] += TARGET_SECONDS - durations.reduce((a, b) => a + b, 0);
+    const lastRatio = durations.at(-1) / (segments.at(-1).end - segments.at(-1).start);
+    const mappedEnd = TARGET_SECONDS - (1 - lastRatio) / detectedFps;
+    const correction = mappedEnd / durations.reduce((a, b) => a + b, 0);
+    durations = durations.map((d) => d * correction);
+  }
+  return { durations, active, frozen, freezeCount };
 }
 
 function speedFilters(speed) {
@@ -354,7 +367,9 @@ async function processVideo() {
     const pauses = extractFreezeSpans(analysisLogs, info.duration);
     const segments = makeSegments(info.duration, pauses);
     if (!segments.length) throw new Error(t('noSegments'));
-    const allocation = allocateDurations(segments);
+    // Never stretch a short source just to fill 59 seconds. It can still have its pauses shortened.
+    const fitTo59 = ui.fitTo59.checked && info.duration > TARGET_SECONDS;
+    const allocation = allocateDurations(segments, fitTo59);
     const hasAudio = analysisLogs.some((line) => /\bAudio:/i.test(line));
     const keepAudio = hasAudio && !ui.removeAudio.checked;
     const filters = createTimeline(segments, allocation.durations, keepAudio);
@@ -364,7 +379,7 @@ async function processVideo() {
     if (keepAudio) args.push('-map', '[aout]', '-c:a', 'aac', '-b:a', '160k');
     args.push('-c:v', 'libx264', '-preset', 'ultrafast', '-crf', '24', '-pix_fmt', 'yuv420p',
       '-fps_mode', 'passthrough', '-enc_time_base', '1:1000000', '-video_track_timescale', '1000000',
-      '-t', '59.000000', '-movflags', '+faststart', outputName);
+      ...(fitTo59 ? ['-t', '59.000000'] : []), '-movflags', '+faststart', outputName);
     encodingVideo = true;
     await ffmpeg.exec(args);
     encodingVideo = false;
@@ -378,7 +393,8 @@ async function processVideo() {
     ui.selectButton.hidden = true;
     ui.download.href = outputUrl;
     ui.download.download = `${chosenFile.name.replace(/\.[^.]+$/, '')}_2One.mp4`;
-    ui.resultDetails.textContent = t('result', allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength), hasAudio && !keepAudio);
+    const outputDuration = fitTo59 ? TARGET_SECONDS : allocation.durations.reduce((sum, duration) => sum + duration, 0);
+    ui.resultDetails.textContent = t('result', prettyDuration(outputDuration), allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength), hasAudio && !keepAudio);
     ui.result.hidden = false;
     setProgress(100, t('complete'), t('kept'));
     toast(t('toastReady'));
@@ -405,6 +421,7 @@ async function setFile(file) {
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   if (outputUrl) { URL.revokeObjectURL(outputUrl); outputUrl = null; }
   chosenFile = file;
+  chosenDuration = null;
   previewUrl = URL.createObjectURL(file);
   ui.preview.src = previewUrl;
   ui.preview.controls = true;
@@ -419,6 +436,8 @@ async function setFile(file) {
   ui.engineProgress.style.width = '0%';
   try {
     const info = await readVideoInfo(file);
+    chosenDuration = info.duration;
+    updateProcessButton();
     ui.fileDetails.textContent = t('fileDuration', prettyDuration(info.duration), prettySize(file.size), info.width, info.height);
   } catch (error) {
     ui.fileDetails.textContent = prettySize(file.size);
@@ -429,9 +448,13 @@ async function setFile(file) {
 ui.input.addEventListener('change', (event) => setFile(event.target.files?.[0]));
 ui.selectButton.addEventListener('click', () => ui.input.click());
 ui.process.addEventListener('click', processVideo);
+ui.fitTo59.addEventListener('change', () => {
+  updateProcessButton();
+});
 ui.remove.addEventListener('click', () => {
   if (busy) return;
   chosenFile = null;
+  chosenDuration = null;
   ui.removeAudio.checked = false;
   ui.input.value = '';
   ui.panel.hidden = true;
