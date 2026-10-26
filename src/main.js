@@ -22,6 +22,7 @@ const copy = {
     received: (received) => `${received} downloaded · video engine`,
     failed: (name, status) => `Could not download ${name} (${status}).`,
     toastReady: 'Your video is ready to download.', unknown: 'Video processing failed.',
+    shareVideo: 'Share video', shareUnavailable: 'Direct sharing is not available in this browser. Download the video to share it.', shareCancelled: 'Sharing cancelled.',
   },
   fa: {
     engineLoading: 'دریافت موتور ویدیو', engineCached: 'بارگذاری نسخهٔ ذخیره‌شده', engineSize: 'اولین‌بار حدود ۳۱ مگابایت · در صورت امکان در این مرورگر ذخیره می‌شود',
@@ -39,6 +40,7 @@ const copy = {
     received: (received) => `${received} دریافت شد · موتور ویدیو`,
     failed: (name, status) => `دریافت ${name} ناموفق بود (${status}).`,
     toastReady: 'ویدیوت آمادهٔ دانلود است.', unknown: 'پردازش ویدیو ناموفق بود.',
+    shareVideo: 'اشتراک‌گذاری ویدیو', shareUnavailable: 'اشتراک‌گذاری مستقیم در این مرورگر در دسترس نیست. ویدیو را دانلود و سپس ارسال کن.', shareCancelled: 'اشتراک‌گذاری لغو شد.',
   },
 };
 const t = (key, ...args) => {
@@ -73,7 +75,7 @@ const ui = {
   removeAudio: $('removeAudio'), fitTo59: $('fitTo59'),
   engine: $('engineCard'), engineTitle: $('engineTitle'), engineText: $('engineText'),
   enginePercent: $('enginePercent'), engineProgress: $('engineProgress'),
-  result: $('resultCard'), resultDetails: $('resultDetails'), download: $('downloadButton'), toast: $('toast'),
+  result: $('resultCard'), resultDetails: $('resultDetails'), download: $('downloadButton'), share: $('shareButton'), toast: $('toast'),
 };
 
 let ffmpeg;
@@ -83,6 +85,7 @@ let busy = false;
 let chosenFile;
 let previewUrl;
 let outputUrl;
+let outputFile;
 let toastTimer;
 let activeLogs = null;
 let detectedFps = 30;
@@ -379,13 +382,14 @@ async function processVideo() {
     setProgress(98, t('doneDownload'), t('finishing'));
     const data = await ffmpeg.readFile(outputName);
     if (outputUrl) URL.revokeObjectURL(outputUrl);
-    outputUrl = URL.createObjectURL(new Blob([data], { type: 'video/mp4' }));
+    outputFile = new File([data], `${chosenFile.name.replace(/\.[^.]+$/, '')}_2One.mp4`, { type: 'video/mp4' });
+    outputUrl = URL.createObjectURL(outputFile);
     ui.preview.src = outputUrl;
     ui.preview.controls = true;
     ui.preview.hidden = false;
     ui.selectButton.hidden = true;
     ui.download.href = outputUrl;
-    ui.download.download = `${chosenFile.name.replace(/\.[^.]+$/, '')}_2One.mp4`;
+    ui.download.download = outputFile.name;
     const outputDuration = fitTo59 ? TARGET_SECONDS : allocation.durations.reduce((sum, duration) => sum + duration, 0);
     ui.resultDetails.textContent = t('result', prettyDuration(outputDuration), allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength), hasAudio && !keepAudio);
     ui.result.hidden = false;
@@ -413,6 +417,7 @@ async function setFile(file) {
   }
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   if (outputUrl) { URL.revokeObjectURL(outputUrl); outputUrl = null; }
+  outputFile = null;
   chosenFile = file;
   previewUrl = URL.createObjectURL(file);
   ui.preview.src = previewUrl;
@@ -438,6 +443,17 @@ async function setFile(file) {
 ui.input.addEventListener('change', (event) => setFile(event.target.files?.[0]));
 ui.selectButton.addEventListener('click', () => ui.input.click());
 ui.process.addEventListener('click', processVideo);
+ui.share.addEventListener('click', async () => {
+  if (!outputFile || typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function' || !navigator.canShare({ files: [outputFile] })) {
+    toast(t('shareUnavailable'));
+    return;
+  }
+  try {
+    await navigator.share({ files: [outputFile], title: '2One' });
+  } catch (error) {
+    if (error?.name !== 'AbortError') toast(error?.message || t('shareUnavailable'));
+  }
+});
 ui.remove.addEventListener('click', () => {
   if (busy) return;
   chosenFile = null;
@@ -456,6 +472,7 @@ ui.remove.addEventListener('click', () => {
   if (outputUrl) URL.revokeObjectURL(outputUrl);
   previewUrl = null;
   outputUrl = null;
+  outputFile = null;
 });
 window.addEventListener('pagehide', () => {
   if (previewUrl) URL.revokeObjectURL(previewUrl);

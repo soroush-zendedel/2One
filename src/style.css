@@ -56,6 +56,9 @@ h1{margin:0;color:#202124;font-size:clamp(34px,7vw,47px);line-height:1.16;letter
 .result-card>span{flex:1;color:var(--muted);font-size:11px}
 .download-button{padding:8px 11px;border:1px solid var(--line);border-radius:6px;color:#202124;text-decoration:none;font-size:12px;font-weight:600}
 .download-button:hover{background:#f4f3ef}
+.share-button{padding:8px 11px;border:0;border-radius:6px;background:#202124;color:#fff;font:600 12px system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}
+.share-button:hover{background:#37383a}
+html[lang=fa] .share-button{font-family:Vazirmatn,system-ui,sans-serif}
 .site-footer{margin-top:48px;padding:20px 0 18px;border-top:1px solid var(--line);color:#777772}
 .footer-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .footer-brand{color:#202124;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:-.5px}
