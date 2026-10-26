@@ -1,7 +1,7 @@
 :root{font-family:system-ui,-apple-system,'Segoe UI',sans-serif;color:#202124;background:#f8f7f4;font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;--muted:#777772;--line:#e8e6e1;--accent:#202124;--surface:#fff}
 *{box-sizing:border-box}
-body{margin:0;min-width:320px;min-height:100vh;background:#f8f7f4}
-.app-shell{width:min(100% - 48px,1040px);min-height:100svh;margin:auto;display:flex;flex-direction:column}
+body{margin:0;min-width:320px;min-height:100dvh;background:#f8f7f4}
+.app-shell{width:min(100% - 48px,1040px);min-height:100svh;min-height:100dvh;margin:auto;display:flex;flex-direction:column}
 .topbar{height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
 .brand{color:#202124;text-decoration:none;font-size:21px;font-weight:700;letter-spacing:-1.2px}
 .topbar-links{display:flex;align-items:center;gap:10px}
@@ -63,8 +63,8 @@ footer{min-height:64px;display:flex;align-items:center;justify-content:space-bet
 [hidden]{display:none!important}
 
 @media(max-width:600px){
-  body{min-height:100svh;background:#f8f7f4}
-  .app-shell{width:100%;min-height:100svh;padding:0 22px env(safe-area-inset-bottom)}
+  body{min-height:100dvh;background:#f8f7f4}
+  .app-shell{width:100%;min-height:100svh;min-height:100dvh;padding:env(safe-area-inset-top) 22px env(safe-area-inset-bottom)}
   .topbar{height:64px;flex:none;border-bottom-color:#eeede8}
   .brand{font-size:19px}
   .topbar-links{gap:7px}
@@ -72,7 +72,8 @@ footer{min-height:64px;display:flex;align-items:center;justify-content:space-bet
   .language-link{width:38px;padding:0!important;font-size:11px!important;font-weight:600}
   .language-full{display:none}
   .language-short{display:inline}
-  .studio{width:100%;margin:auto;transform:translateY(-2vh)}
+  main{display:flex;flex-direction:column}
+  .studio{width:100%;margin:auto;transform:translateY(clamp(0px,2.5dvh,20px))}
   .intro{margin-bottom:27px}
   .eyebrow{margin-bottom:14px;font-size:10px}
   h1{font-size:clamp(33px,9vw,39px);letter-spacing:-1.3px}
