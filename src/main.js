@@ -18,8 +18,7 @@ const copy = {
     readingMetadata: (size) => `Reading video · ${size}`,
     result: (duration, count, size, silent) => `${duration} · ${size} · ${count} still moments shortened${silent ? ' · Audio removed' : ''}`,
     makeVideo: 'Create video',
-    progressBytes: (received, total, cached) => `${received} of ${total} · ${cached ? 'saved copy' : 'downloaded'}`,
-    received: (received) => `${received} downloaded · video engine`,
+    received: (received) => `${received} received · video engine`,
     failed: (name, status) => `Could not download ${name} (${status}).`,
     toastReady: 'Your video is ready to download.', unknown: 'Video processing failed.',
     shareVideo: 'Share video', shareUnavailable: 'Direct sharing is not available in this browser. Download the video to share it.', shareCancelled: 'Sharing cancelled.',
@@ -36,7 +35,6 @@ const copy = {
     readingMetadata: (size) => `در حال خواندن ویدیو · ${size}`,
     result: (duration, count, size, silent) => `${duration} · ${size} · ${count} بخش ثابت کوتاه شد${silent ? ' · صدا حذف شد' : ''}`,
     makeVideo: 'ساخت ویدیو',
-    progressBytes: (received, total, cached) => `${received} از ${total} · ${cached ? 'نسخهٔ ذخیره‌شده' : 'در حال دریافت'}`,
     received: (received) => `${received} دریافت شد · موتور ویدیو`,
     failed: (name, status) => `دریافت ${name} ناموفق بود (${status}).`,
     toastReady: 'ویدیوت آمادهٔ دانلود است.', unknown: 'پردازش ویدیو ناموفق بود.',
@@ -133,15 +131,18 @@ function prettyDuration(seconds) {
 }
 
 function setProgress(value, title, detail) {
-  const clamped = Math.min(100, Math.max(0, value));
+  const indeterminate = value === null;
+  const clamped = indeterminate ? 0 : Math.min(100, Math.max(0, value));
   ui.engine.hidden = false;
   ui.engineTitle.textContent = title;
   if (detail) ui.engineText.textContent = detail;
-  ui.enginePercent.textContent = isPersian ? `${Math.round(clamped).toLocaleString('fa-IR')}٪` : `${Math.round(clamped)}%`;
+  ui.enginePercent.textContent = indeterminate ? '…' : isPersian ? `${Math.round(clamped).toLocaleString('fa-IR')}٪` : `${Math.round(clamped)}%`;
+  ui.engineProgress.classList.toggle('indeterminate', indeterminate);
   ui.engineProgress.style.width = `${clamped}%`;
 }
 
 function showError(message) {
+  ui.engineProgress.classList.remove('indeterminate');
   ui.engineTitle.textContent = t('error');
   ui.engineText.textContent = message;
   ui.enginePercent.textContent = '×';
@@ -149,7 +150,7 @@ function showError(message) {
   ui.engineProgress.style.background = '#ff6685';
 }
 
-async function preloadAsset(url, rangeStart, rangeEnd, name) {
+async function preloadAsset(url, name) {
   let cache;
   let cachedResponse;
   try {
@@ -161,21 +162,15 @@ async function preloadAsset(url, rangeStart, rangeEnd, name) {
   if (!response.ok) throw new Error(t('failed', name, response.status));
   const backupResponse = fromCache ? null : response.clone();
   const title = () => `${t(fromCache ? 'engineCached' : 'engineLoading')} · ${name}`;
-  const total = Number(response.headers.get('content-length')) || 0;
   const reader = response.body.getReader();
   let received = 0;
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     received += value.byteLength;
-    if (total) {
-      const fraction = Math.min(1, received / total);
-      setProgress(rangeStart + fraction * (rangeEnd - rangeStart), title(),
-        t('progressBytes', prettySize(received), prettySize(total), fromCache));
-    } else {
-      setProgress(rangeStart + ((received / (30 * 1024 * 1024)) * (rangeEnd - rangeStart)) % (rangeEnd - rangeStart),
-        title(), fromCache ? t('loadedFromCache') : t('received', prettySize(received)));
-    }
+    // Do not compare streamed bytes with Content-Length: Fetch may transparently
+    // decompress the body, making the received byte count larger than that header.
+    setProgress(null, title(), fromCache ? t('loadedFromCache') : t('received', prettySize(received)));
   }
   if (!fromCache) {
     const storedByWorker = await waitForEngineCache(url);
@@ -196,8 +191,8 @@ async function loadEngine() {
     await serviceWorkerReady;
     const coreUrl = new URL(`${CORE_BASE}ffmpeg-core.js`, window.location.href).href;
     const wasmUrl = new URL(`${CORE_BASE}ffmpeg-core.wasm`, window.location.href).href;
-    await preloadAsset(coreUrl, 0, 8, t('coreFile'));
-    await preloadAsset(wasmUrl, 8, 82, t('coreEngine'));
+    await preloadAsset(coreUrl, t('coreFile'));
+    await preloadAsset(wasmUrl, t('coreEngine'));
     setProgress(85, t('initialize'), t('wait'));
     ffmpeg ??= new FFmpeg();
     ffmpeg.on('log', ({ message }) => {
