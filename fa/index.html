@@ -3,22 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#f8f7f4" />
+    <meta name="theme-color" content="#fdfcfb" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="دیدی" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%icon.svg" />
     <link rel="canonical" href="https://soroush-zendedel.github.io/Didi/fa/" />
     <link rel="alternate" hreflang="en" href="https://soroush-zendedel.github.io/Didi/" />
     <link rel="alternate" hreflang="fa" href="https://soroush-zendedel.github.io/Didi/fa/" />
     <link rel="alternate" hreflang="x-default" href="https://soroush-zendedel.github.io/Didi/" />
     <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
-    <meta name="description" content="با دیدی ویدیو را بدون بریدن به زمان دلخواه برسانید؛ لحظه‌های ثابت تندتر می‌گذرند و می‌توانید ویدیو را کوتاه‌تر یا طولانی‌تر کنید. پردازش در مرورگر انجام می‌شود." />
+    <meta name="author" content="Soroush Zendedel" />
+    <meta name="robots" content="index, follow" />
+    <meta name="keywords" content="کاهش مدت ویدیو، افزایش زمان ویدیو، کوتاه کردن ویدیو برای شورتس، ابزار ویرایش ویدیو در مرورگر، تنظیم زمان ویدیو، دیدی، Didi" />
+    <meta name="description" content="با دیدی ویدیو را برای شورتس و ویدیوهای کوتاه به زمان دلخواه برسانید؛ مکث‌ها را کوتاه یا پخش را آهسته کنید. پردازش خصوصی در مرورگر انجام می‌شود." />
     <meta property="og:title" content="دیدی — تنظیم مدت ویدیو برای ویدیوهای کوتاه" />
-    <meta property="og:description" content="ویدیو را بدون بریدن کوتاه‌تر یا طولانی‌تر کنید تا به زمان دلخواه برسد. فایل روی دستگاه شما می‌ماند." />
+    <meta property="og:description" content="ویدیو را بدون بریدن به زمان دلخواه برسانید؛ مکث‌ها را کوتاه کنید یا پخش را آهسته‌تر کنید. فایل روی دستگاه شما می‌ماند." />
     <meta property="og:site_name" content="دیدی" />
     <meta property="og:url" content="https://soroush-zendedel.github.io/Didi/fa/" />
     <meta property="og:type" content="website" />
-    <title>دیدی — تنظیم مدت ویدیو برای ویدیوهای کوتاه</title>
+    <meta property="og:locale" content="fa_IR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:url" content="https://soroush-zendedel.github.io/Didi/fa/" />
+    <meta name="twitter:title" content="دیدی — ابزار تنظیم زمان ویدیو برای شورتس" />
+    <meta name="twitter:description" content="ویدیو را بدون بریدن به زمان دلخواه برسانید؛ مکث‌ها را کوتاه کنید یا پخش را آهسته‌تر کنید." />
+    <script type="application/ld+json">
+      {"@context":"https://schema.org","@type":"SoftwareApplication","name":"دیدی","alternateName":"Didi","url":"https://soroush-zendedel.github.io/Didi/fa/","applicationCategory":"MultimediaApplication","operatingSystem":"Any","inLanguage":"fa","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"creator":{"@type":"Person","name":"Soroush Zendedel","url":"https://soroush-zendedel.github.io/"},"description":"ابزار رایگان تنظیم زمان ویدیو برای شورتس و ویدیوهای کوتاه؛ کوتاه یا طولانی‌کردن ویدیو با پردازش خصوصی در مرورگر.","featureList":["تنظیم ویدیو روی زمان دلخواه","کوتاه‌کردن مکث‌های تصویری بدون حذف فریم","پردازش ویدیو در مرورگر"]}
+    </script>
+    <title>دیدی — ابزار تنظیم زمان ویدیو برای شورتس</title>
   </head>
   <body>
     <div class="app-shell">
@@ -32,8 +45,9 @@
       <main id="main">
         <section class="studio" aria-labelledby="title">
           <div class="intro">
+            <img class="hero-mark" src="%BASE_URL%images/didi-mark.png" alt="" width="112" height="109" />
             <p class="eyebrow" data-t="eyebrow">یک ویدیوی کوتاه‌تر، در چند لحظه</p>
-            <h1 id="title" data-t="title">مدت ویدیوی خود را انتخاب کنید!</h1>
+            <h1 id="title"><span class="fa-title-line">مدت ویدیوی خود را؛</span><span class="fa-title-line">انتخاب کنید!</span></h1>
             <p class="lede" data-t="lede">ویدیو بریده نمی‌شود؛ مکث‌ها تندتر می‌گذرند و در صورت نیاز، پخش آهسته‌تر می‌شود تا به زمان دلخواهتان برسد.</p>
           </div>
           <input id="videoInput" type="file" accept="video/*,.mov,.mp4,.m4v,.webm" hidden />

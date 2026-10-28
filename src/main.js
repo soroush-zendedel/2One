@@ -178,7 +178,7 @@ function stopActivityTimer() {
 function scrollToElement(element) {
   requestAnimationFrame(() => {
     element.scrollIntoView({
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      behavior: 'auto',
       block: 'center',
     });
   });

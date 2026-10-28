@@ -1,12 +1,12 @@
 {
   "name": "Didi Video Shortener",
   "short_name": "Didi",
-  "description": "Choose a target length and shorten still moments in your browser.",
+  "description": "Shorten or extend video playback to your chosen length in your browser.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f8f7f4",
-  "theme_color": "#f8f7f4",
+  "background_color": "#f1eeea",
+  "theme_color": "#fdfcfb",
   "icons": [
     {
       "src": "./icon.svg",
