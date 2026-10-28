@@ -7,7 +7,19 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://soroush-zendedel.github.io/Didi/" />
   </url>
   <url>
+    <loc>https://soroush-zendedel.github.io/Didi/fa/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://soroush-zendedel.github.io/Didi/" />
+    <xhtml:link rel="alternate" hreflang="fa" href="https://soroush-zendedel.github.io/Didi/fa/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://soroush-zendedel.github.io/Didi/" />
+  </url>
+  <url>
     <loc>https://soroush-zendedel.github.io/Didi/about.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://soroush-zendedel.github.io/Didi/about.html" />
+    <xhtml:link rel="alternate" hreflang="fa" href="https://soroush-zendedel.github.io/Didi/fa/about.html" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://soroush-zendedel.github.io/Didi/about.html" />
+  </url>
+  <url>
+    <loc>https://soroush-zendedel.github.io/Didi/fa/about.html</loc>
     <xhtml:link rel="alternate" hreflang="en" href="https://soroush-zendedel.github.io/Didi/about.html" />
     <xhtml:link rel="alternate" hreflang="fa" href="https://soroush-zendedel.github.io/Didi/fa/about.html" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://soroush-zendedel.github.io/Didi/about.html" />
