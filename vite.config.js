@@ -4,8 +4,7 @@ import { fileURLToPath } from 'node:url';
 const page = (path) => fileURLToPath(new URL(path, import.meta.url));
 
 export default defineConfig({
-  // Change this if the GitHub repository has a different name.
-  base: process.env.GITHUB_ACTIONS ? '/2One/' : '/',
+  base: process.env.GITHUB_ACTIONS ? '/Didi/' : '/',
   optimizeDeps: {
     exclude: ['@ffmpeg/ffmpeg'],
   },

@@ -1,7 +1,7 @@
 {
-  "name": "2One Video Shortener",
-  "short_name": "2One",
-  "description": "Make your video under one minute, in your browser.",
+  "name": "Didi Video Shortener",
+  "short_name": "Didi",
+  "description": "Choose a target length and shorten still moments in your browser.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -1,4 +1,5 @@
-const CACHE_NAME = '2one-engine-v1';
+const CACHE_NAME = 'didi-engine-v1';
+const LEGACY_CACHE_NAME = '2one-engine-v1';
 const pendingWrites = new Map();
 
 self.addEventListener('install', (event) => {
@@ -9,7 +10,8 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const cacheNames = await caches.keys();
     await Promise.all(cacheNames
-      .filter((name) => name.startsWith('2one-engine-') && name !== CACHE_NAME)
+      .filter((name) => (name.startsWith('didi-engine-') && name !== CACHE_NAME)
+        || (name.startsWith('2one-engine-') && name !== LEGACY_CACHE_NAME))
       .map((name) => caches.delete(name)));
     await self.clients.claim();
   })());

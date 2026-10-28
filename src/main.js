@@ -2,7 +2,8 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import './style.css';
 
 const CORE_BASE = `${import.meta.env.BASE_URL}ffmpeg/`;
-const ENGINE_CACHE = '2one-engine-v1';
+const ENGINE_CACHE = 'didi-engine-v1';
+const LEGACY_ENGINE_CACHE = '2one-engine-v1';
 const isPersian = document.documentElement.lang === 'fa';
 const copy = {
   en: {
@@ -192,9 +193,20 @@ function showError(message) {
 async function preloadAsset(url, name) {
   let cache;
   let cachedResponse;
+  let legacyCache;
+  let legacyUrl;
+  let migratedCache = false;
   try {
     cache = await caches.open(ENGINE_CACHE);
     cachedResponse = await cache.match(url);
+    if (!cachedResponse) {
+      legacyCache = await caches.open(LEGACY_ENGINE_CACHE);
+      legacyUrl = new URL(url);
+      const currentBase = new URL(import.meta.env.BASE_URL, window.location.href).pathname;
+      legacyUrl.pathname = legacyUrl.pathname.replace(currentBase, '/2One/');
+      cachedResponse = await legacyCache.match(legacyUrl.href);
+      migratedCache = Boolean(cachedResponse);
+    }
   } catch { /* Cache Storage may be unavailable or full. */ }
   const fromCache = Boolean(cachedResponse);
   const response = cachedResponse || await fetch(url, { cache: 'force-cache' });
@@ -217,6 +229,8 @@ async function preloadAsset(url, name) {
       try { await cache.put(url, backupResponse); } catch { /* processing can continue without saved cache */ }
     }
     await requestPersistentStorage();
+  } else if (migratedCache && cache) {
+    try { await cache.put(url, response.clone()); } catch { /* existing cached engine remains usable */ }
   }
   return url;
 }
@@ -241,6 +255,7 @@ async function loadEngine() {
       if (encodingVideo && Number.isFinite(progress)) setProgress(27 + Math.max(0, Math.min(1, progress)) * 70, t('making'), t('keepFrames'));
     });
     await ffmpeg.load({ coreURL: coreUrl, wasmURL: wasmUrl });
+    try { await caches.delete(LEGACY_ENGINE_CACHE); } catch { /* cache migration is best-effort */ }
     engineReady = true;
     setProgress(100, t('complete'), t('local'));
   } catch (error) {
@@ -388,15 +403,15 @@ async function processVideo() {
   ui.engineProgress.style.background = '';
   setProgress(null, t('read'), t('readingLocal'));
   scrollToElement(ui.engine);
-  let inputName = '2one_input';
-  let outputName = '2one_output.mp4';
+  let inputName = 'didi_input';
+  let outputName = 'didi_output.mp4';
   try {
     await loadEngine();
     setProgress(null, t('read'), t('readingLocal'));
     const info = await readVideoInfo(chosenFile);
     if (!Number.isFinite(info.duration) || info.duration <= 0) throw new Error(t('durationError'));
     const ext = chosenFile.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'mp4';
-    inputName = `2one_input.${ext}`;
+    inputName = `didi_input.${ext}`;
     setProgress(null, t('read'), t('preparingFile'));
     startActivityTimer();
     try {
@@ -441,7 +456,7 @@ async function processVideo() {
     setProgress(98, t('doneDownload'), t('finishing'));
     const data = await ffmpeg.readFile(outputName);
     if (outputUrl) URL.revokeObjectURL(outputUrl);
-    outputFile = new File([data], `${chosenFile.name.replace(/\.[^.]+$/, '')}_2One.mp4`, { type: 'video/mp4' });
+    outputFile = new File([data], `${chosenFile.name.replace(/\.[^.]+$/, '')}_Didi.mp4`, { type: 'video/mp4' });
     outputUrl = URL.createObjectURL(outputFile);
     ui.preview.src = outputUrl;
     ui.preview.controls = true;
@@ -514,7 +529,7 @@ ui.share.addEventListener('click', async () => {
     return;
   }
   try {
-    await navigator.share({ files: [outputFile], title: '2One' });
+    await navigator.share({ files: [outputFile], title: isPersian ? 'دیدی' : 'Didi' });
   } catch (error) {
     if (error?.name !== 'AbortError') toast(error?.message || t('shareUnavailable'));
   }

@@ -1,4 +1,4 @@
-name: Build and deploy 2One
+name: Build and deploy Didi
 
 on:
   push:
