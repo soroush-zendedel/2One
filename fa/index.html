@@ -48,7 +48,7 @@
               <div class="file-info"><strong id="fileName"></strong><span id="fileDetails"></span></div>
               <button id="removeFile" class="icon-button" type="button" data-aria="remove" aria-label="حذف ویدیو">×</button>
             </div>
-            <video id="sourcePreview" class="source-preview" controls playsinline hidden></video>
+            <div id="previewSlot"><video id="sourcePreview" class="source-preview" controls playsinline hidden></video></div>
             <div class="audio-option duration-option">
               <label for="targetDuration"><strong>مدت ویدیو</strong><small>زمان خروجی را انتخاب کن.</small></label>
               <select id="targetDuration">
@@ -89,6 +89,24 @@
         <nav class="breadcrumbs" aria-label="مسیر صفحه"><ol><li><a href="https://soroush-zendedel.github.io">سروش زنددیل</a></li><li><a href="../">دیدی</a></li><li aria-current="page">صفحهٔ اصلی</li></ol></nav>
       </footer>
     </div>
+    <dialog id="previewModal" class="result-modal" aria-labelledby="modalTitle">
+      <div class="modal-stage">
+        <div id="modalVideoSlot" class="modal-video-slot"></div>
+        <button id="modalPlay" class="modal-play" type="button" aria-label="پخش ویدیو" hidden><span aria-hidden="true">▶</span><small data-t="tapToPlay">برای پخش لمس کنید</small></button>
+        <div class="modal-topbar">
+          <form method="dialog"><button class="modal-close" type="submit" aria-label="بستن پیش‌نمایش">×</button></form>
+          <span class="modal-ready" data-t="ready">ویدیوت آماده است.</span>
+        </div>
+        <div class="modal-overlay">
+          <div class="modal-info"><strong id="modalTitle" data-t="previewTitle">ویدیوی شما</strong><span id="modalDetails"></span></div>
+          <p id="modalNotice" class="modal-notice" role="status" aria-live="polite" hidden></p>
+          <div class="modal-actions">
+            <a id="modalDownload" class="modal-action modal-download" href="#" download><span aria-hidden="true">↓</span><span data-t="download">دانلود ویدیو</span></a>
+            <button id="modalShare" class="modal-action modal-share" type="button"><span aria-hidden="true">↗</span><span data-t="shareVideo">اشتراک‌گذاری ویدیو</span></button>
+          </div>
+        </div>
+      </div>
+    </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script type="module" src="/src/main.js"></script>
   </body>

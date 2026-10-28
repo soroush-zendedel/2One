@@ -51,7 +51,7 @@
               <div class="file-info"><strong id="fileName"></strong><span id="fileDetails"></span></div>
               <button id="removeFile" class="icon-button" type="button" data-aria="remove" aria-label="Remove video">×</button>
             </div>
-            <video id="sourcePreview" class="source-preview" controls playsinline hidden></video>
+            <div id="previewSlot"><video id="sourcePreview" class="source-preview" controls playsinline hidden></video></div>
             <div class="audio-option duration-option">
               <label for="targetDuration"><strong>Video length</strong><small>Choose the final duration.</small></label>
               <select id="targetDuration">
@@ -92,6 +92,24 @@
         <nav class="breadcrumbs" aria-label="Breadcrumb"><ol><li><a href="https://soroush-zendedel.github.io">Soroush Zendedel</a></li><li><a href="./">Didi</a></li><li aria-current="page">Home</li></ol></nav>
       </footer>
     </div>
+    <dialog id="previewModal" class="result-modal" aria-labelledby="modalTitle">
+      <div class="modal-stage">
+        <div id="modalVideoSlot" class="modal-video-slot"></div>
+        <button id="modalPlay" class="modal-play" type="button" aria-label="Play video" hidden><span aria-hidden="true">▶</span><small data-t="tapToPlay">Tap to play</small></button>
+        <div class="modal-topbar">
+          <form method="dialog"><button class="modal-close" type="submit" aria-label="Close preview">×</button></form>
+          <span class="modal-ready" data-t="ready">Your video is ready.</span>
+        </div>
+        <div class="modal-overlay">
+          <div class="modal-info"><strong id="modalTitle" data-t="previewTitle">Your video</strong><span id="modalDetails"></span></div>
+          <p id="modalNotice" class="modal-notice" role="status" aria-live="polite" hidden></p>
+          <div class="modal-actions">
+            <a id="modalDownload" class="modal-action modal-download" href="#" download><span aria-hidden="true">↓</span><span data-t="download">Download video</span></a>
+            <button id="modalShare" class="modal-action modal-share" type="button"><span aria-hidden="true">↗</span><span data-t="shareVideo">Share video</span></button>
+          </div>
+        </div>
+      </div>
+    </dialog>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script type="module" src="/src/main.js"></script>
   </body>

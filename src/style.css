@@ -71,6 +71,38 @@ html[lang=fa] .custom-duration label{font-family:Vazirmatn,system-ui,sans-serif}
 .share-button{padding:8px 11px;border:0;border-radius:6px;background:#202124;color:#fff;font:600 12px system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}
 .share-button:hover{background:#37383a}
 html[lang=fa] .share-button{font-family:Vazirmatn,system-ui,sans-serif}
+.result-modal{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;overflow:hidden;border:0;background:#101114;color:#fff}
+.result-modal::backdrop{background:#101114}
+.result-modal[open]{animation:modal-enter .24s cubic-bezier(.2,.7,.25,1) both}
+@keyframes modal-enter{from{opacity:0;transform:scale(1.015)}to{opacity:1;transform:scale(1)}}
+.modal-stage{position:relative;width:100%;height:100%;display:grid;place-items:center;overflow:hidden;background:radial-gradient(ellipse at center,#28292d 0%,#17181b 58%,#101114 100%)}
+.modal-video-slot{position:absolute;inset:0;display:grid;place-items:center}
+.modal-video-slot .source-preview{width:100%;height:100%;max-height:none;margin:0;border-radius:0;object-fit:contain;background:transparent}
+.modal-topbar{position:absolute;z-index:2;inset-inline:0;top:0;display:flex;align-items:center;gap:14px;padding:calc(16px + env(safe-area-inset-top)) 20px 20px;background:linear-gradient(#08090c99,transparent)}
+.modal-topbar form{margin:0}
+.modal-close{width:42px;height:42px;display:grid;place-items:center;border:1px solid #ffffff38;border-radius:50%;background:#15161999;color:#fff;font:300 29px/1 system-ui,sans-serif;cursor:pointer;backdrop-filter:blur(12px);transition:background .16s ease,transform .16s ease}
+.modal-close:hover{background:#ffffff2b;transform:scale(1.04)}
+.modal-ready{color:#ffffffc7;font-size:13px;font-weight:500;text-shadow:0 1px 5px #0008}
+.modal-overlay{position:absolute;z-index:2;inset-inline:0;bottom:0;padding:48px 20px calc(74px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#090a0ddd 72%)}
+.modal-info,.modal-actions{width:min(100%,520px);margin-inline:auto}
+.modal-info{display:flex;flex-direction:column;gap:5px;margin-bottom:15px;text-shadow:0 1px 6px #0009}
+.modal-info strong{font-size:15px;font-weight:650}
+.modal-info span{color:#ffffffc2;font-size:12px;line-height:1.5}
+.modal-notice{width:min(100%,520px);margin:-5px auto 13px;padding:10px 13px;border:1px solid #ffffff2b;border-radius:12px;background:#ffffff14;color:#fff;font-size:12px;line-height:1.55;backdrop-filter:blur(14px)}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-action{min-height:50px;display:flex;align-items:center;justify-content:center;gap:9px;padding:0 14px;border:1px solid #ffffff3d;border-radius:999px;color:#fff;text-decoration:none;font:600 13px system-ui,-apple-system,'Segoe UI',sans-serif;backdrop-filter:blur(16px);transition:transform .16s ease,background .16s ease}
+.modal-action:hover{transform:translateY(-1px)}
+.modal-action>span:first-child{font-size:17px;line-height:1}
+.modal-download{border-color:#fff;background:#fff;color:#202124}
+.modal-download:hover{background:#eee}
+.modal-share{background:#ffffff1a;cursor:pointer}
+.modal-share:hover{background:#ffffff2e}
+.modal-play{position:absolute;z-index:3;top:50%;left:50%;display:flex;flex-direction:column;align-items:center;gap:11px;transform:translate(-50%,-50%);border:0;background:transparent;color:#fff;font:inherit;cursor:pointer;text-shadow:0 2px 14px #0009}
+.modal-play>span{width:76px;height:76px;display:grid;place-items:center;padding-inline-start:4px;border:1px solid #ffffff9c;border-radius:50%;background:#16171a8c;font-size:23px;backdrop-filter:blur(12px);box-shadow:0 10px 36px #0004}
+.modal-play small{font-size:13px;font-weight:600}
+html[lang=fa] .modal-action,html[lang=fa] .modal-ready,html[lang=fa] .modal-info,html[lang=fa] .modal-play{font-family:Vazirmatn,system-ui,sans-serif}
+html[lang=fa] .modal-play>span{padding-inline-start:0;padding-inline-end:4px}
+@media(prefers-reduced-motion:reduce){.result-modal[open]{animation:none}.modal-close,.modal-action{transition:none}}
 .site-footer{margin-top:48px;padding:20px 0 18px;border-top:1px solid var(--line);color:#777772}
 .footer-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .footer-brand{color:#202124;text-decoration:none;font-size:14px;font-weight:700;letter-spacing:-.5px}

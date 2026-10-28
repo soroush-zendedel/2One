@@ -23,6 +23,7 @@ const copy = {
     failed: (name, status) => `Could not download ${name} (${status}).`,
     toastReady: 'Your video is ready to download.', unknown: 'Video processing failed.',
     shareVideo: 'Share video', shareUnavailable: 'Direct sharing is not available in this browser. Download the video to share it.', shareCancelled: 'Sharing cancelled.',
+    tapToPlay: 'Tap to play', previewTitle: 'Your video',
     customDurationError: 'Enter a custom duration from 1 to 3,600 seconds.',
   },
   fa: {
@@ -42,6 +43,7 @@ const copy = {
     failed: (name, status) => `دریافت ${name} ناموفق بود (${status}).`,
     toastReady: 'ویدیوت آمادهٔ دانلود است.', unknown: 'پردازش ویدیو ناموفق بود.',
     shareVideo: 'اشتراک‌گذاری ویدیو', shareUnavailable: 'اشتراک‌گذاری مستقیم در این مرورگر در دسترس نیست. ویدیو را دانلود و سپس ارسال کن.', shareCancelled: 'اشتراک‌گذاری لغو شد.',
+    tapToPlay: 'برای پخش لمس کنید', previewTitle: 'ویدیوی شما',
     customDurationError: 'مدت دلخواه را بین ۱ تا ۳۶۰۰ ثانیه وارد کن.',
   },
 };
@@ -74,7 +76,8 @@ const $ = (id) => document.getElementById(id);
 const ui = {
   shell: document.querySelector('.app-shell'),
   input: $('videoInput'), selectButton: $('selectButton'), process: $('processButton'),
-  preview: $('sourcePreview'), panel: $('filePanel'), fileName: $('fileName'), fileDetails: $('fileDetails'), remove: $('removeFile'),
+  preview: $('sourcePreview'), previewSlot: $('previewSlot'), modalVideoSlot: $('modalVideoSlot'), modal: $('previewModal'), modalPlay: $('modalPlay'), modalDetails: $('modalDetails'), modalNotice: $('modalNotice'), modalDownload: $('modalDownload'), modalShare: $('modalShare'),
+  panel: $('filePanel'), fileName: $('fileName'), fileDetails: $('fileDetails'), remove: $('removeFile'),
   removeAudio: $('removeAudio'), targetDuration: $('targetDuration'),
   customDurationRow: $('customDurationRow'), customDuration: $('customDuration'),
   engine: $('engineCard'), engineTitle: $('engineTitle'), engineText: $('engineText'),
@@ -464,12 +467,16 @@ async function processVideo() {
     ui.selectButton.hidden = true;
     ui.download.href = outputUrl;
     ui.download.download = outputFile.name;
+    ui.modalDownload.href = outputUrl;
+    ui.modalDownload.download = outputFile.name;
     const outputDuration = targetSeconds ?? allocation.durations.reduce((sum, duration) => sum + duration, 0);
     ui.resultDetails.textContent = t('result', prettyDuration(outputDuration), allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength), hasAudio && !keepAudio);
+    ui.modalDetails.textContent = ui.resultDetails.textContent;
     ui.result.hidden = false;
     setProgress(100, t('complete'), t('kept'));
     scrollToElement(ui.result);
     toast(t('toastReady'));
+    openResultModal();
     try { await ffmpeg.deleteFile(inputName); await ffmpeg.deleteFile(outputName); } catch { /* cleaned when next file is loaded */ }
   } catch (error) {
     activeLogs = null;
@@ -523,17 +530,48 @@ ui.process.addEventListener('click', processVideo);
 ui.targetDuration.addEventListener('change', () => {
   ui.customDurationRow.hidden = ui.targetDuration.value !== 'custom';
 });
-ui.share.addEventListener('click', async () => {
+async function shareOutput(event) {
+  const fromModal = event.currentTarget === ui.modalShare;
   if (!outputFile || typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function' || !navigator.canShare({ files: [outputFile] })) {
-    toast(t('shareUnavailable'));
+    if (fromModal) {
+      ui.modalNotice.textContent = t('shareUnavailable');
+      ui.modalNotice.hidden = false;
+    } else toast(t('shareUnavailable'));
     return;
   }
   try {
     await navigator.share({ files: [outputFile], title: isPersian ? 'دیدی' : 'Didi' });
   } catch (error) {
-    if (error?.name !== 'AbortError') toast(error?.message || t('shareUnavailable'));
+    if (error?.name !== 'AbortError') {
+      if (fromModal) {
+        ui.modalNotice.textContent = error?.message || t('shareUnavailable');
+        ui.modalNotice.hidden = false;
+      } else toast(error?.message || t('shareUnavailable'));
+    }
   }
+}
+ui.share.addEventListener('click', shareOutput);
+ui.modalShare.addEventListener('click', shareOutput);
+function openResultModal() {
+  if (!outputUrl || ui.modal.open) return;
+  ui.modalVideoSlot.append(ui.preview);
+  ui.modalNotice.hidden = true;
+  ui.modal.showModal();
+  ui.modalPlay.hidden = true;
+  ui.preview.play().then(() => { ui.modalPlay.hidden = true; }).catch(() => { ui.modalPlay.hidden = false; });
+}
+ui.modalPlay.addEventListener('click', async () => {
+  try { await ui.preview.play(); } catch { ui.modalPlay.hidden = false; }
 });
+ui.preview.addEventListener('playing', () => { ui.modalPlay.hidden = true; });
+ui.preview.addEventListener('pause', () => { if (ui.modal.open) ui.modalPlay.hidden = false; });
+ui.modal.addEventListener('close', () => {
+  ui.preview.pause();
+  ui.previewSlot.append(ui.preview);
+  ui.modalPlay.hidden = true;
+  ui.modalNotice.hidden = true;
+});
+ui.modal.addEventListener('click', (event) => { if (event.target === ui.modal) ui.modal.close(); });
 ui.remove.addEventListener('click', () => {
   if (busy) return;
   chosenFile = null;
