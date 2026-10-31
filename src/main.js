@@ -554,11 +554,20 @@ ui.share.addEventListener('click', shareOutput);
 ui.modalShare.addEventListener('click', shareOutput);
 function openResultModal() {
   if (!outputUrl || ui.modal.open) return;
-  ui.modalVideoSlot.append(ui.preview);
-  ui.modalNotice.hidden = true;
-  ui.modal.showModal();
-  ui.modalPlay.hidden = true;
-  ui.preview.play().then(() => { ui.modalPlay.hidden = true; }).catch(() => { ui.modalPlay.hidden = false; });
+  try {
+    ui.modalVideoSlot.append(ui.preview);
+    ui.modalNotice.hidden = true;
+    if (typeof ui.modal.showModal !== 'function') throw new Error('Dialog is not supported');
+    ui.modal.showModal();
+    ui.modalPlay.hidden = true;
+    ui.preview.play().then(() => { ui.modalPlay.hidden = true; }).catch(() => { ui.modalPlay.hidden = false; });
+  } catch (error) {
+    console.warn('Could not open the result dialog; showing the inline result instead.', error);
+    if (ui.modal.open) ui.modal.close();
+    ui.previewSlot.append(ui.preview);
+    ui.modalPlay.hidden = true;
+    ui.result.scrollIntoView({ behavior: 'auto', block: 'center' });
+  }
 }
 ui.modalPlay.addEventListener('click', async () => {
   try { await ui.preview.play(); } catch { ui.modalPlay.hidden = false; }
