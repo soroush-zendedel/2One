@@ -83,6 +83,7 @@ const ui = {
   engine: $('engineCard'), engineTitle: $('engineTitle'), engineText: $('engineText'),
   enginePercent: $('enginePercent'), engineProgress: $('engineProgress'),
   result: $('resultCard'), resultDetails: $('resultDetails'), download: $('downloadButton'), share: $('shareButton'), toast: $('toast'),
+  diagnostics: $('diagnostics'), diagnosticsText: $('diagnosticsText'), diagnosticsCopy: $('diagnosticsCopy'),
 };
 
 let ffmpeg;
@@ -99,6 +100,33 @@ let detectedFps = 30;
 let activityTimer;
 let activityStartedAt = 0;
 let activityDetail = '';
+const diagnosticLines = [];
+
+function diagnose(message) {
+  const line = `${new Date().toISOString()} ${message}`;
+  diagnosticLines.push(line);
+  if (diagnosticLines.length > 40) diagnosticLines.shift();
+  if (ui.diagnosticsText) ui.diagnosticsText.textContent = diagnosticLines.join('\n');
+  console.info('[Didi diagnostic]', line);
+}
+
+ui.diagnosticsCopy?.addEventListener('click', async () => {
+  const report = diagnosticLines.join('\n');
+  try {
+    await navigator.clipboard.writeText(report);
+    toast(isPersian ? 'گزارش کپی شد.' : 'Diagnostic report copied.');
+  } catch {
+    ui.diagnosticsText?.focus();
+    ui.diagnosticsText?.select();
+    toast(isPersian ? 'گزارش را انتخاب و کپی کن.' : 'Select and copy the report.');
+  }
+});
+
+window.addEventListener('error', (event) => diagnose(`window.error ${event.message} ${event.filename}:${event.lineno}:${event.colno}`));
+window.addEventListener('unhandledrejection', (event) => diagnose(`unhandledrejection ${event.reason?.stack || event.reason}`));
+document.addEventListener('visibilitychange', () => diagnose(`visibilitychange ${document.visibilityState}`));
+window.addEventListener('pagehide', (event) => diagnose(`pagehide persisted=${event.persisted}`));
+window.addEventListener('pageshow', (event) => diagnose(`pageshow persisted=${event.persisted}`));
 
 async function waitForEngineCache(url, timeoutMs = 8000) {
   const controller = navigator.serviceWorker?.controller;
@@ -390,6 +418,7 @@ function createTimeline(segments, durations, hasAudio) {
 
 async function processVideo() {
   if (!chosenFile) return;
+  diagnose(`process-start file=${chosenFile.name} bytes=${chosenFile.size} target=${ui.targetDuration.value} removeAudio=${ui.removeAudio.checked}`);
   const targetSeconds = ui.targetDuration.value === 'auto'
     ? null
     : ui.targetDuration.value === 'custom' ? Number(ui.customDuration.value) : Number(ui.targetDuration.value);
@@ -458,9 +487,17 @@ async function processVideo() {
     }
     setProgress(98, t('doneDownload'), t('finishing'));
     const data = await ffmpeg.readFile(outputName);
+    diagnose(`output-read bytes=${data.byteLength} type=${data.constructor?.name}`);
     if (outputUrl) URL.revokeObjectURL(outputUrl);
-    outputFile = new File([data], `${chosenFile.name.replace(/\.[^.]+$/, '')}_Didi.mp4`, { type: 'video/mp4' });
+    try {
+      outputFile = new File([data], `${chosenFile.name.replace(/\.[^.]+$/, '')}_Didi.mp4`, { type: 'video/mp4' });
+      diagnose('output-file File-constructor=ok');
+    } catch (error) {
+      diagnose(`output-file File-constructor-failed ${error?.stack || error}`);
+      outputFile = new Blob([data], { type: 'video/mp4' });
+    }
     outputUrl = URL.createObjectURL(outputFile);
+    diagnose(`output-url created bytes=${data.byteLength}`);
     ui.preview.src = outputUrl;
     ui.preview.controls = true;
     ui.preview.hidden = false;
@@ -473,16 +510,20 @@ async function processVideo() {
     ui.resultDetails.textContent = t('result', prettyDuration(outputDuration), allocation.freezeCount.toLocaleString(isPersian ? 'fa-IR' : 'en-US'), prettySize(data.byteLength), hasAudio && !keepAudio);
     ui.modalDetails.textContent = ui.resultDetails.textContent;
     ui.result.hidden = false;
+    ui.diagnostics.hidden = false;
     setProgress(100, t('complete'), t('kept'));
     ui.shell.classList.remove('is-editing');
     scrollToElement(ui.result);
     toast(t('toastReady'));
+    diagnose('result-visible; attempting modal');
     openResultModal();
+    diagnose(`process-complete modal-open=${ui.modal.open}`);
     try { await ffmpeg.deleteFile(inputName); await ffmpeg.deleteFile(outputName); } catch { /* cleaned when next file is loaded */ }
   } catch (error) {
     activeLogs = null;
     encodingVideo = false;
     console.error(error);
+    diagnose(`process-failed ${error?.stack || error}`);
     showError(error?.message || t('unknown'));
     toast(error?.message || t('unknown'));
   } finally {
@@ -556,13 +597,15 @@ ui.modalShare.addEventListener('click', shareOutput);
 function openResultModal() {
   if (!outputUrl || ui.modal.open) return;
   try {
+    diagnose('modal-open attempt');
     ui.modalVideoSlot.append(ui.preview);
     ui.modalNotice.hidden = true;
     if (typeof ui.modal.showModal !== 'function') throw new Error('Dialog is not supported');
     ui.modal.showModal();
     ui.modalPlay.hidden = true;
-    ui.preview.play().then(() => { ui.modalPlay.hidden = true; }).catch(() => { ui.modalPlay.hidden = false; });
+    ui.preview.play().then(() => { ui.modalPlay.hidden = true; diagnose('preview autoplay=started'); }).catch((error) => { ui.modalPlay.hidden = false; diagnose(`preview autoplay=blocked ${error?.name}: ${error?.message}`); });
   } catch (error) {
+    diagnose(`modal-open failed ${error?.stack || error}`);
     console.warn('Could not open the result dialog; showing the inline result instead.', error);
     if (ui.modal.open) ui.modal.close();
     ui.previewSlot.append(ui.preview);
