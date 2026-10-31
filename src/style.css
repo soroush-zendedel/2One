@@ -84,6 +84,16 @@ html[lang=fa] .custom-duration label{font-family:Vazirmatn,system-ui,sans-serif}
 .result-card{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .result-card strong{width:100%;font-size:13px}
 .result-card>span{flex:1;color:var(--muted);font-size:11px}
+.diagnostics{width:100%;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#f8f7f4;text-align:left}
+.diagnostics summary{color:var(--muted);font-size:12px;font-weight:650;cursor:pointer;list-style:none}
+.diagnostics summary::-webkit-details-marker{display:none}
+.diagnostics summary::before{content:'+';display:inline-grid;width:20px;height:20px;margin-inline-end:8px;place-items:center;border:1px solid var(--line);border-radius:50%;color:var(--ink);font-size:15px;vertical-align:middle}
+.diagnostics[open] summary::before{content:'−'}
+.diagnostics button{min-height:36px;margin-top:12px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);font:600 12px system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}
+.diagnostics button:hover{background:#f0eeea}
+.diagnostics textarea{display:block;width:100%;min-height:120px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:7px;background:#202124;color:#e9e9e9;font:11px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;resize:vertical;direction:ltr;text-align:left}
+:root[dir=rtl] .diagnostics{text-align:right}
+html[lang=fa] .diagnostics button{font-family:Vazirmatn,system-ui,sans-serif}
 .download-button{padding:8px 11px;border:1px solid var(--line);border-radius:6px;color:#202124;text-decoration:none;font-size:12px;font-weight:600}
 .download-button:hover{background:#f4f3ef}
 .share-button{padding:8px 11px;border:0;border-radius:6px;background:#202124;color:#fff;font:600 12px system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}
