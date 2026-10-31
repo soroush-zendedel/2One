@@ -474,6 +474,7 @@ async function processVideo() {
     ui.modalDetails.textContent = ui.resultDetails.textContent;
     ui.result.hidden = false;
     setProgress(100, t('complete'), t('kept'));
+    ui.shell.classList.remove('is-editing');
     scrollToElement(ui.result);
     toast(t('toastReady'));
     openResultModal();
